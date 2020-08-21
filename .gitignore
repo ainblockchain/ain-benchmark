@@ -1,0 +1,11 @@
+# Dependency
+node_modules/
+
+# Environment variables
+.env
+
+# IDE
+.idea/
+
+# Logs
+*.log
