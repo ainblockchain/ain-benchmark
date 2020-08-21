@@ -1,0 +1,19 @@
+{
+  "name": "ain-benchmark",
+  "version": "1.0.0",
+  "description": "AIN benchmark tool",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ainblockchain/ain-benchmark.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ainblockchain/ain-benchmark/issues"
+  },
+  "homepage": "https://github.com/ainblockchain/ain-benchmark#readme"
+}
