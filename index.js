@@ -168,8 +168,7 @@ async function main() {
       `Number: ${number}\n` +
       `Error: ${errorCount}\n` +
       `Verified: ${verifiedCount}\n` +
-      `Unverified: ${unverifiedCount}`,
-  );
+      `Unverified: ${unverifiedCount}`);
 
 }
 
