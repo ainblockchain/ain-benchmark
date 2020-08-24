@@ -126,7 +126,7 @@ async function main() {
   let errorCount = 0;
   const verifyPromiseList = [];
 
-  let tempCount = 0;
+  let progressCount = 0;
 
   /* Check all */
   for (const txHash of txHashList) {
@@ -137,7 +137,7 @@ async function main() {
 
     verifyPromiseList.push(new Promise((resolve, reject) => {
       ain.getTransaction(txHash).then((verifyResult) => {
-        console.log(`${tempCount++}/${number}`);
+        console.log(`${++progressCount}/${number}`);
         resolve(verifyResult);
       }).catch((err) => {
         resolve(err);
@@ -156,7 +156,6 @@ async function main() {
     } else if (!!verifyResult &&
         verifyResult.hasOwnProperty('is_confirmed') &&
         verifyResult.is_confirmed === true) {
-      console.log(verifyResult);
       verifiedCount++;
     } else {
       unverifiedCount++;
