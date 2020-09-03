@@ -1,6 +1,5 @@
 const Base = require('./base');
-// const Ain = require('@ainblockchain/ain-js').default;
-const Ain = require('../../../ain-js/lib/ain').default;
+const Ain = require('@ainblockchain/ain-js').default;
 const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 const moment = require('moment');
 
