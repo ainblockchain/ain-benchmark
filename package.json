@@ -19,6 +19,9 @@
   "dependencies": {
     "@ainblockchain/ain-js": "^1.0.2",
     "dotenv": "^8.2.0",
-    "moment": "^2.27.0"
+    "express": "^4.17.1",
+    "moment": "^2.27.0",
+    "morgan": "^1.10.0",
+    "path": "^0.12.7"
   }
 }
