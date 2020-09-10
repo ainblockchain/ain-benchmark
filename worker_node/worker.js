@@ -36,7 +36,7 @@ class Worker {
     this.#jobList[this.#currentJobId] = {
       status: JobStatus.PROGRESS,
       input: jobInput,
-      output: null,
+      output: {},
     };
     return jobInstance;
   }
@@ -49,7 +49,7 @@ class Worker {
     let jobInstance = null;
     if (jobInput.type === JobType.SEND) {
       jobInstance = new SendJob(jobInput.config);
-    } else if (jobInput.type === JobType.VERIFY) {
+    } else if (jobInput.type === JobType.CONFIRM) {
       throw Error('Not support yet');
     } else {
       throw Error(`Unknown job type (${jobType}`);
