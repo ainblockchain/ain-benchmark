@@ -13,7 +13,7 @@ class Send extends Base {
       statistics: {
         success: 0,
         fail: 0,
-        runningTime: 0,
+        timeFromStartToFinish: 0,
       },
       txHashList: [],
       startBlockNumber: 0,
