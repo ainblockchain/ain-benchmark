@@ -1,6 +1,6 @@
 const JobType = Object.freeze({
   SEND: 'SEND',
-  VERIFY: 'VERIFY',
+  CONFIRM: 'CONFIRM',
 });
 
 const JobStatus = Object.freeze({
