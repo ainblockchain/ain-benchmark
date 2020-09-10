@@ -22,6 +22,7 @@ class Send extends Base {
     this.#ain = new Ain(this.config.ainUrl);
     this.#ain.wallet.add(this.config.ainPrivateKey);
     this.#ain.wallet.setDefaultAccount(this.config.ainAddress);
+    this.#ain.provider.setDefaultTimeoutMs(60 * 1000);
   }
 
   async getRecentBlockInformation(keyList) {
