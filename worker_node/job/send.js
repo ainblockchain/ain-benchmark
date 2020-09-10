@@ -1,44 +1,54 @@
 const Base = require('./base');
 const Ain = require('@ainblockchain/ain-js').default;
 const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
-const moment = require('moment');
+const BLOCK_TIME = 8000;
 
 class Send extends Base {
   #ain;
-  #startTime;
-  #finishTime;
-  #startBlock; // Todo(sanghee): Implement for verifying
-  #finishBlock; // Todo(sanghee): Implement for verifying
 
   constructor(config) {
     super(config);
     this.output = {
-      errorMessage: '',
+      message: '',
       statistics: {
         success: 0,
         fail: 0,
         runningTime: 0,
       },
       txHashList: [],
+      startBlockNumber: 0,
+      finishBlockNumber: 0,
     };
     this.#ain = new Ain(this.config.ainUrl);
     this.#ain.wallet.add(this.config.ainPrivateKey);
     this.#ain.wallet.setDefaultAccount(this.config.ainAddress);
-    this.#startTime = 0;
-    this.#finishTime = 0;
+  }
+
+  async getRecentBlockInformation(keyList) {
+    try {
+      const information = await this.#ain.provider.send('ain_getRecentBlock');
+      return keyList.reduce((acc, cur) => {
+        acc[cur] = information[cur];
+        return acc;
+      }, {});
+    } catch (err) {
+      console.log(`Error while getRecentBlockInformation (${err.message})`);
+      throw err;
+    }
   }
 
   async sendTxs() {
     const delayTime = this.config.time / this.config.number * 1000;
     const sendTxPromiseList = [];
 
-    if (!this.config.baseTx.timestamp) {
-      this.config.baseTx.timestamp = Date.now();
+    if (!this.config.timestamp) {
+      this.config.timestamp = Date.now();
     }
 
     for (let i = 0; i < this.config.number; i++) {
       const tx = Object.assign({}, this.config.baseTx);
-      tx.timestamp = tx.timestamp + i;
+      tx.timestamp = this.config.timestamp + i;
+
       sendTxPromiseList.push(
           new Promise((resolve, reject) => {
             this.#ain.sendTransaction(tx).then(result => {
@@ -71,16 +81,17 @@ class Send extends Base {
   }
 
   async process() {
-    this.#startTime = new Date().getTime();
-
+    const startBlock = await this.getRecentBlockInformation(['timestamp', 'number']);
     const sendResultList = await this.sendTxs();
     const txHashList = this.checkSendResultList(sendResultList);
+    await delay(BLOCK_TIME);
+    const finishBlock = await this.getRecentBlockInformation(['timestamp', 'number']);
 
-    this.#finishTime = new Date().getTime();
-    this.output.statistics.runningTime = moment(
-        this.#finishTime - this.#startTime).format('mm:ss');
+    this.output.statistics.timeFromStartToFinish = finishBlock.timestamp - startBlock.timestamp;
     this.output.txHashList = txHashList;
-    if (this.output.statistics.success === 0) {
+    this.output.startBlockNumber = startBlock.number;
+    this.output.finishBlockNumber = finishBlock.number;
+    if (this.config.number && this.output.statistics.success === 0) {
       throw Error('Success rate 0%');
     }
     return this.output;
