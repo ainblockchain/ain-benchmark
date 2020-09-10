@@ -37,6 +37,50 @@ class Send extends Base {
     }
   }
 
+  async initPermission() {
+    const path = this.config.baseTx.operation.ref;
+    const setOwnerTx = {
+      operation: {
+        type: 'SET_OWNER',
+        ref: path,
+        value: {
+          '.owner': {
+            owners: {
+              '*': {
+                write_owner: true,
+                write_rule: true,
+                write_function: true,
+                branch_owner: true,
+              },
+            },
+          },
+        },
+      },
+      nonce: -1,
+    };
+    const setRuleTx = {
+      operation: {
+        type: 'SET_RULE',
+        ref: path,
+        value: {
+          '.write': true,
+        },
+      },
+      nonce: -1,
+    };
+    await this.#ain.sendTransactionBatch([
+      setOwnerTx,
+      setRuleTx,
+    ]);
+
+    await delay(2 * BLOCK_TIME);
+
+    const writePermission = await this.#ain.db.ref(path).evalRule({value: null});
+    if (!writePermission) {
+      throw Error(`Can't write database (permission)`);
+    }
+  }
+
   async sendTxs() {
     const delayTime = this.config.time / this.config.number * 1000;
     const sendTxPromiseList = [];
@@ -81,6 +125,8 @@ class Send extends Base {
   }
 
   async process() {
+    await this.initPermission();
+
     const startBlock = await this.getRecentBlockInformation(['timestamp', 'number']);
     const sendResultList = await this.sendTxs();
     const txHashList = this.checkSendResultList(sendResultList);
