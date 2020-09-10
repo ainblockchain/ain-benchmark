@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/ainblockchain/ain-benchmark#readme",
   "dependencies": {
-    "@ainblockchain/ain-js": "^1.0.2",
+    "@ainblockchain/ain-js": "^1.0.3",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "moment": "^2.27.0",
