@@ -7,7 +7,7 @@ const worker = require('./worker');
 app.use(express.json({limit: '200mb', extended: true}));
 app.use(logger('tiny'));
 
-app.post('/job', (req, res) => {
+app.post('/job', (req, res, next) => {
   const jobInput = req.body;
 
   try {
@@ -16,15 +16,11 @@ app.post('/job', (req, res) => {
       id,
     });
   } catch (err) {
-    console.log(err.message);
-    const code = !!err.code ? err.code : 400;
-    res.status(code).json({
-      message: err.message,
-    });
+    next(err);
   }
 });
 
-app.get('/job/:id', (req, res) => {
+app.get('/job/:id', (req, res, next) => {
   const id = req.params.id;
 
   try {
@@ -33,17 +29,13 @@ app.get('/job/:id', (req, res) => {
       ...job,
     });
   } catch (err) {
-    console.log(err.message);
-    const code = !!err.code ? err.code : 400;
-    res.status(code).json({
-      message: err.message,
-    });
+    next(err);
   }
 });
 
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send(err.message);
+  console.error(err);
+  res.status(err.code || 500).send(err.message);
 });
 
 app.listen(port, () => {
