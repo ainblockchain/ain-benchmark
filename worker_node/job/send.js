@@ -4,10 +4,18 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 const BLOCK_TIME = 8000;
 
 class Send extends Base {
+  static configProps = [
+    'duration',
+    'numberOfTransactions',
+    'ainUrl',
+    'ainAddress',
+    'ainPrivateKey',
+    'baseTx',
+  ];
   #ain;
 
   constructor(config) {
-    super(config);
+    super(config, Send.configProps);
     this.output = {
       message: '',
       statistics: {
@@ -19,6 +27,7 @@ class Send extends Base {
       startBlockNumber: 0,
       finishBlockNumber: 0,
     };
+
     this.#ain = new Ain(this.config.ainUrl);
     this.#ain.wallet.add(this.config.ainPrivateKey);
     this.#ain.wallet.setDefaultAccount(this.config.ainAddress);
