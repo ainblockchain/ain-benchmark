@@ -83,14 +83,14 @@ class Send extends Base {
   }
 
   async sendTxs() {
-    const delayTime = this.config.time / this.config.number * 1000;
+    const delayTime = this.config.duration / this.config.numberOfTransactions * 1000;
     const sendTxPromiseList = [];
 
     if (!this.config.timestamp) {
       this.config.timestamp = Date.now();
     }
 
-    for (let i = 0; i < this.config.number; i++) {
+    for (let i = 0; i < this.config.numberOfTransactions; i++) {
       const tx = Object.assign({}, this.config.baseTx);
       tx.timestamp = this.config.timestamp + i;
 
@@ -121,7 +121,7 @@ class Send extends Base {
     });
 
     this.output.statistics.success = txHashList.length;
-    this.output.statistics.fail = this.config.number - txHashList.length;
+    this.output.statistics.fail = this.config.numberOfTransactions - txHashList.length;
     return txHashList;
   }
 
@@ -138,7 +138,7 @@ class Send extends Base {
     this.output.txHashList = txHashList;
     this.output.startBlockNumber = startBlock.number;
     this.output.finishBlockNumber = finishBlock.number;
-    if (this.config.number && this.output.statistics.success === 0) {
+    if (this.config.numberOfTransactions && this.output.statistics.success === 0) {
       throw Error('Success rate 0%');
     }
     return this.output;
