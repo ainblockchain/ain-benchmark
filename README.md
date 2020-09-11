@@ -12,5 +12,5 @@ Currently supported performance indicators:
 
 ```
 npm install
-PORT=3000 node worker_node/index.js
+npm run start-worker
 ```
