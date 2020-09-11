@@ -4,6 +4,7 @@
   "description": "AIN benchmark tool",
   "main": "index.js",
   "scripts": {
+    "start-worker": "node worker_node/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
