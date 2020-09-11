@@ -3,9 +3,10 @@ class Base {
   #config;
   #output;
 
-  constructor(config) {
+  constructor(config, requiredProps) {
     this.#config = config;
     this.#output = null;
+    this.validateConfig(requiredProps);
   }
 
   get config() {
@@ -22,6 +23,14 @@ class Base {
 
   async process() {
     throw Error('Need to implement process()');
+  }
+
+  validateConfig(requiredProps) {
+    for (const prop of requiredProps) {
+      if (!Object.keys(this.#config).includes(prop)) {
+        throw Error(`Need ${prop} property`);
+      }
+    }
   }
 
 }
