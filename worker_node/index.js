@@ -16,6 +16,7 @@ app.post('/job', (req, res) => {
       id,
     });
   } catch (err) {
+    console.log(err.message);
     const code = !!err.code ? err.code : 400;
     res.status(code).json({
       message: err.message,
@@ -32,6 +33,7 @@ app.get('/job/:id', (req, res) => {
       ...job,
     });
   } catch (err) {
+    console.log(err.message);
     const code = !!err.code ? err.code : 400;
     res.status(code).json({
       message: err.message,
