@@ -1,5 +1,6 @@
 const { JobStatus, JobType } = require('../constants');
 const SendJob = require('./job/send');
+const ConfirmJob = require('./job/confirm');
 
 class Worker {
   #jobList; // [{ status, input, output }]
@@ -50,9 +51,9 @@ class Worker {
     if (jobInput.type === JobType.SEND) {
       jobInstance = new SendJob(jobInput.config);
     } else if (jobInput.type === JobType.CONFIRM) {
-      throw Error('Not support yet');
+      jobInstance = new ConfirmJob(jobInput.config);
     } else {
-      throw Error(`Unknown job type (${jobType}`);
+      throw Error(`Unknown job type (${jobInput.type}`);
     }
     return jobInstance;
   }
@@ -78,7 +79,7 @@ class Worker {
 
   /**
    * @param {Object} jobInput
-   * @return {*}
+   * @return {Number}
    */
   startJob(jobInput) {
     const jobInstance = this.initJob(jobInput);
