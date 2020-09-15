@@ -1,7 +1,8 @@
 const Base = require('./base');
 const Ain = require('@ainblockchain/ain-js').default;
 const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
-const BLOCK_TIME = 8000;
+const BLOCK_TIME = process.env.BLOCK_TIME || 8000;
+const REQUEST_THRESHOLD = process.env.REQUEST_THRESHOLD || 100; // When the threshold is reached, request is temporarily stopped
 
 class Send extends Base {
   static configProps = [
@@ -20,8 +21,9 @@ class Send extends Base {
       message: '',
       statistics: {
         success: 0,
-        fail: 0,
-        timeFromStartToFinish: 0,
+        error: 0,
+        pass: 0,
+        duration: 0,
       },
       txHashList: [],
       startBlockNumber: 0,
@@ -110,8 +112,14 @@ class Send extends Base {
     }
 
     for (let i = 0; i < this.config.numberOfTransactions; i++) {
-      const tx = this.makeTransaction(i);
+      await delay(delayTime);
 
+      if (process._getActiveRequests().length >= REQUEST_THRESHOLD) {
+        this.output.statistics.pass++;
+        continue;
+      }
+
+      const tx = this.makeTransaction(i);
       sendTxPromiseList.push(
           new Promise((resolve, reject) => {
             this.#ain.sendTransaction(tx).then(result => {
@@ -126,7 +134,6 @@ class Send extends Base {
             });
           }),
       );
-      await delay(delayTime);
     }
 
     const sendTxResultList = await Promise.all(sendTxPromiseList);
@@ -139,7 +146,7 @@ class Send extends Base {
     });
 
     this.output.statistics.success = txHashList.length;
-    this.output.statistics.fail = this.config.numberOfTransactions - txHashList.length;
+    this.output.statistics.error = this.config.numberOfTransactions - txHashList.length - this.output.statistics.pass;
     return txHashList;
   }
 
@@ -152,7 +159,7 @@ class Send extends Base {
     await delay(BLOCK_TIME);
     const finishBlock = await this.getRecentBlockInformation(['timestamp', 'number']);
 
-    this.output.statistics.timeFromStartToFinish = finishBlock.timestamp - startBlock.timestamp;
+    this.output.statistics.duration = finishBlock.timestamp - startBlock.timestamp;
     this.output.txHashList = txHashList;
     this.output.startBlockNumber = startBlock.number;
     this.output.finishBlockNumber = finishBlock.number;
