@@ -7,6 +7,7 @@ const JobStatus = Object.freeze({
   PROGRESS: 'PROGRESS',
   SUCCESS: 'SUCCESS',
   FAIL: 'FAIL',
+  PASS: 'PASS',
 });
 
 module.exports = {
