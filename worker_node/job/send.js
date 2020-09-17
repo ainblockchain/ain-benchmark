@@ -3,6 +3,7 @@ const Ain = require('@ainblockchain/ain-js').default;
 const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 const BLOCK_TIME = process.env.BLOCK_TIME || 8000;
 const REQUEST_THRESHOLD = process.env.REQUEST_THRESHOLD || 100; // When the threshold is reached, request is temporarily stopped
+const RETRY_THRESHOLD = 3;
 
 class Send extends Base {
   static configProps = [
@@ -37,15 +38,23 @@ class Send extends Base {
   }
 
   async getRecentBlockInformation(keyList) {
-    try {
-      const information = await this.#ain.provider.send('ain_getRecentBlock');
-      return keyList.reduce((acc, cur) => {
-        acc[cur] = information[cur];
-        return acc;
-      }, {});
-    } catch (err) {
-      console.log(`Error while getRecentBlockInformation (${err.message})`);
-      throw err;
+    let retryCount = 0;
+    while (true) {
+      try {
+        const information = await this.#ain.provider.send('ain_getRecentBlock');
+        return keyList.reduce((acc, cur) => {
+          acc[cur] = information[cur];
+          return acc;
+        }, {});
+      } catch (err) {
+        console.log(`Error while getRecentBlockInformation (${err.message}) (Retry:${retryCount})`);
+        if (retryCount >= RETRY_THRESHOLD) {
+          console.log(`getRecentBlockInformation: Throw error (${err.message})`);
+          throw err;
+        }
+        retryCount++;
+        await delay(2 * BLOCK_TIME);
+      }
     }
   }
 
