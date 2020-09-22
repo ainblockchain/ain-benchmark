@@ -4,7 +4,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 const worker = require('./worker');
 
-app.use(express.json({limit: '200mb', extended: true}));
+app.use(express.json({ limit: '4gb', extended: true }));
 app.use(logger('tiny'));
 
 app.post('/job', (req, res, next) => {
