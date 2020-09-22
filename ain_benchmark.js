@@ -60,6 +60,8 @@ async function requestJob(job) {
       baseURL: job.workerUrl,
       url: '/job',
       data: job.input,
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
       timeout: 30 * 1000,
     });
     job.status = JobStatus.PROGRESS;
