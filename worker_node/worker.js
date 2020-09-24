@@ -43,6 +43,23 @@ class Worker {
   }
 
   /**
+   * @param {String} id
+   */
+  deleteJob(id) {
+    if (!this.#jobList[id]) {
+      throw Error(`Job ID ${id} is not exist`);
+    }
+
+    if (!this.#jobList[id].status === JobStatus.DELETE) {
+      throw Error(`Already deleted`);
+    }
+
+    this.#jobList[id].input = {};
+    this.#jobList[id].output = {};
+    this.#jobList[id].status = JobStatus.DELETE;
+  }
+
+  /**
    * @param {Object} jobInput
    * @return {Base}
    */
