@@ -33,6 +33,19 @@ app.get('/job/:id', (req, res, next) => {
   }
 });
 
+app.delete('/job/:id', (req, res, next) => {
+  const id = req.params.id;
+
+  try {
+    worker.deleteJob(id);
+    res.json({
+      id,
+    })
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(err.code || 500).send(err.message);
