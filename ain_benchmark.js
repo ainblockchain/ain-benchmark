@@ -35,7 +35,12 @@ function makeTestList(benchmarkConfig) {
 
 async function request(config) {
   try {
-    const response = await axios(config);
+    const response = await axios({
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+      timeout: 30 * 1000,
+      ...config,
+    });
     return {
       status: response.status,
       data: response.data,
@@ -60,9 +65,6 @@ async function requestJob(job) {
       baseURL: job.workerUrl,
       url: '/job',
       data: job.input,
-      maxContentLength: Infinity,
-      maxBodyLength: Infinity,
-      timeout: 30 * 1000,
     });
     job.status = JobStatus.PROGRESS;
     job.id = response.data.id;
@@ -70,6 +72,21 @@ async function requestJob(job) {
     console.log(err.message);
     job.status = JobStatus.FAIL;
     job.output.message = err.message;
+  }
+}
+
+async function requestToDeleteJob(job) {
+  try {
+    const response = await request({
+      method: 'delete',
+      baseURL: job.workerUrl,
+      url: `/job/${job.id}`,
+    });
+    job.input = {};
+    job.output = {};
+    job.status.status = JobStatus.DELETE;
+  } catch (err) {
+    console.log(err.message);
   }
 }
 
@@ -100,7 +117,6 @@ async function waitJob(testList, jobIndex) {
           method: 'get',
           baseURL: job.workerUrl,
           url: `/job/${job.id}`,
-          timeout: 30 * 1000,
         });
 
         job.status = response.data.status;
@@ -127,7 +143,7 @@ function addSendJob(testList) {
         type: JobType.SEND,
         config: {
           ...test.config,
-          timestamp
+          timestamp,
         },
       },
       output: {},
@@ -146,15 +162,21 @@ function addConfirmJob(testList) {
       output: {},
     };
 
+    const prevJobIndex = test.jobList.length - 1;
+
     try {
-      if (test.jobList[0].status === JobStatus.FAIL) {
+      if (test.jobList[prevJobIndex].status === JobStatus.FAIL) {
         throw Error('Previous job failed');
       }
+      if (test.jobList[prevJobIndex].type === JobType.SEND) {
+        throw Error(`Previous job is not 'SEND' type`);
+      }
+
       job.input.config = {
         ainUrl: test.config.ainUrl,
-        startBlockNumber: test.jobList[0].output.startBlockNumber,
-        finishBlockNumber: test.jobList[0].output.finishBlockNumber,
-        txHashList: test.jobList[0].output.txHashList,
+        startBlockNumber: test.jobList[prevJobIndex].output.startBlockNumber,
+        finishBlockNumber: test.jobList[prevJobIndex].output.finishBlockNumber,
+        txHashList: test.jobList[prevJobIndex].output.txHashList,
       };
     } catch (err) {
       job.status = JobStatus.PASS;
@@ -222,7 +244,8 @@ function printResult(testList) {
     for (let i = 0; i < 2; i++) {
       const job = test.jobList[i];
       if (job.status === JobStatus.SUCCESS) {
-        console.log(`Type: ${job.input.type}, Status: ${job.status}, Statistics: ${JSON.stringify(job.output.statistics)}`);
+        console.log(`Type: ${job.input.type}, Status: ${job.status}, ` +
+            `Statistics: ${JSON.stringify(job.output.statistics)}`);
       } else {
         console.log(`Type: ${job.input.type}, Status: ${job.status}, Error message: ${job.output.message}`);
       }
@@ -233,6 +256,23 @@ function printResult(testList) {
   const tpsList = getTpsList(testList);
   console.log(JSON.stringify(tpsList, null, 4));
   console.log(`Total TPS: ${calculateTotalTps(tpsList)}`);
+}
+
+async function clear(testList) {
+  for (const test of testList) {
+    for (let i = 0; i < 2; i++) {
+      const job = test.jobList[i];
+      if (job.status !== JobStatus.SUCCESS) {
+        continue;
+      }
+      try {
+        await requestToDeleteJob(job);
+      } catch (err) {
+        console.log(`Fail to delete job (${err.message})`);
+      }
+
+    }
+  }
 }
 
 async function main() {
@@ -246,6 +286,7 @@ async function main() {
   await waitJob(testList, 1);
 
   printResult(testList);
+  await clear(testList);
 }
 
 main().catch(err => {
