@@ -1,6 +1,7 @@
 const Base = require('./base');
 const Ain = require('@ainblockchain/ain-js').default;
 const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
+const axios = require('axios');
 const BLOCK_TIME = process.env.BLOCK_TIME || 8000;
 const REQUEST_THRESHOLD = process.env.REQUEST_THRESHOLD || 100; // When the threshold is reached, request is temporarily stopped
 const RETRY_THRESHOLD = 3;
@@ -76,6 +77,7 @@ class Send extends Base {
             },
           },
         },
+        is_global: true
       },
       nonce: -1,
     };
@@ -86,6 +88,7 @@ class Send extends Base {
         value: {
           '.write': true,
         },
+        is_global: true
       },
       nonce: -1,
     };
@@ -96,8 +99,20 @@ class Send extends Base {
 
     await delay(2 * BLOCK_TIME);
 
-    const writePermission = await this.#ain.db.ref(path).evalRule({value: null});
-    if (!writePermission) {
+    // TODO: update ain-js to support is_global and use ain-js here
+    const response = await axios.post(this.config.ainUrl + 'json-rpc', {
+      method: 'ain_evalRule',
+      params: {
+        ref: path,
+        value: null,
+        address: this.config.ainAddress,
+        is_global: true,
+        protoVer: '0.1.0'
+      },
+      jsonrpc: '2.0',
+      id: 0
+    });
+    if (!response.data.result.result) {
       throw Error(`Can't write database (permission)`);
     }
   }
