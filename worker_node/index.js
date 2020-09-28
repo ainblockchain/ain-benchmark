@@ -40,7 +40,22 @@ app.delete('/job/:id', (req, res, next) => {
     worker.deleteJob(id);
     res.json({
       id,
-    })
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/status', (req, res, next) => {
+  try {
+    const heapUsedMiB = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+    const heapTotalMiB = Math.round(process.memoryUsage().heapTotal / 1024 / 1024);
+    res.json({
+      memory: {
+        heapUsedMiB,
+        heapTotalMiB,
+      }
+    });
   } catch (err) {
     next(err);
   }
