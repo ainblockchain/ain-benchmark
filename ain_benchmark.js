@@ -1,4 +1,4 @@
-const axios = require('axios');
+const request = require('./util/request');
 const fs = require('fs');
 const moment = require('moment-timezone');
 const { JobStatus, JobType } = require('./constants');
@@ -42,26 +42,6 @@ function makeTestList(benchmarkConfig) {
   return testList;
 }
 
-async function request(config) {
-  try {
-    const response = await axios({
-      maxContentLength: Infinity,
-      maxBodyLength: Infinity,
-      timeout: 30 * 1000,
-      ...config,
-    });
-    return {
-      status: response.status,
-      data: response.data,
-    };
-  } catch (err) {
-    if (!!err.response) { // Status isn't 2XX
-      throw Error(`status: ${err.response.status}, data: ${JSON.stringify(err.response.data)}`);
-    } else { // Timeout || Something wrong
-      throw err;
-    }
-  }
-}
 
 async function requestJob(job) {
   if (job.status === JobStatus.PASS) {
