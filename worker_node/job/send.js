@@ -96,9 +96,19 @@ class Send extends Base {
       },
       nonce: -1,
     };
+    const setValueTx = {
+      operation: {
+        type: 'SET_VALUE',
+        ref: path,
+        value: 0,
+        is_global: true
+      },
+      nonce: -1,
+    };
     await this.#ain.sendTransactionBatch([
       setOwnerTx,
       setRuleTx,
+      setValueTx,
     ]);
 
     await delay(2 * BLOCK_TIME);
