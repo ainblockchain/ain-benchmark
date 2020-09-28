@@ -8,9 +8,10 @@
       "ainAddress": "0x9d973ED46714511E371dd5Bb3baa6b67aEbb7a19",
       "ainPrivateKey": "a1b18fba7f40cb6ba0bd00c47b962f2aaa338f525e15d52e26123618dc726cd2",
       "transactionOperation": {
-        "type": "SET_VALUE",
-        "ref": "/apps/test/1",
-        "value": 1
+        "type": "INC_VALUE",
+        "ref": "/apps/shard_1/app_visit/visit_count",
+        "value": 1,
+        "is_global": true
       }
     }
   ]
