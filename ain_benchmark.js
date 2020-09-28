@@ -1,8 +1,16 @@
 const axios = require('axios');
 const fs = require('fs');
+const moment = require('moment-timezone');
 const { JobStatus, JobType } = require('./constants');
 const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 const debugMode = !!process.env.DEBUG;
+const resultDir = `result_${moment().tz('Asia/Seoul').format('MM-DD_HH:mm:SS')}`;
+
+function initResultDirectory() {
+  if (!fs.existsSync(resultDir)) {
+    fs.mkdirSync(resultDir);
+  }
+}
 
 function checkArgs() {
   if (process.argv.length !== 3) {
@@ -279,6 +287,7 @@ async function main() {
   checkArgs();
   const benchmarkConfig = readFile(process.argv[2]);
   const testList = makeTestList(benchmarkConfig);
+  initResultDirectory();
 
   await processSendJob(testList);
   await waitJob(testList, 0);
