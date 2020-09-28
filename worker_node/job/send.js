@@ -196,6 +196,10 @@ class Send extends Base {
     await this.initPermission();
 
     const startBlock = await this.getRecentBlockInformation(['timestamp', 'number']);
+    if (!startBlock.number) {
+      throw Error(`Genesis block was not created! (current block number: ${startBlock.number})`);
+    }
+
     const sendResultList = await this.sendTxs();
     const txHashList = this.checkSendResultList(sendResultList);
     await delay(BLOCK_TIME);
