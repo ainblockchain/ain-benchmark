@@ -36,6 +36,10 @@ class Send extends Base {
     this.#ain.wallet.add(this.config.ainPrivateKey);
     this.#ain.wallet.setDefaultAccount(this.config.ainAddress);
     this.#ain.provider.setDefaultTimeoutMs(60 * 1000);
+
+    // TODO: remove
+    this.httpClient = axios.create();
+    this.httpClient.defaults.timeout = 60 * 1000;
   }
 
   async getRecentBlockInformation(keyList) {
@@ -100,7 +104,7 @@ class Send extends Base {
     await delay(2 * BLOCK_TIME);
 
     // TODO: update ain-js to support is_global and use ain-js here
-    const response = await axios.post(this.config.ainUrl + 'json-rpc', {
+    const response = await this.httpClient.post(this.config.ainUrl + 'json-rpc', {
       method: 'ain_evalRule',
       params: {
         ref: path,
