@@ -6,7 +6,6 @@ class Confirm extends Base {
     'ainUrl',
     'startBlockNumber',
     'finishBlockNumber',
-    'txHashList',
   ];
   #ain;
 

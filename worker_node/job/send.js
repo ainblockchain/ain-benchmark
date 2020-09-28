@@ -27,7 +27,6 @@ class Send extends Base {
         pass: 0,
         duration: 0,
       },
-      txHashList: [],
       startBlockNumber: 0,
       finishBlockNumber: 0,
     };

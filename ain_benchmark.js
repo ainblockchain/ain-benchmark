@@ -177,7 +177,6 @@ function addConfirmJob(testList) {
         ainUrl: test.config.ainUrl,
         startBlockNumber: test.jobList[prevJobIndex].output.startBlockNumber,
         finishBlockNumber: test.jobList[prevJobIndex].output.finishBlockNumber,
-        txHashList: test.jobList[prevJobIndex].output.txHashList,
       };
     } catch (err) {
       job.status = JobStatus.PASS;
