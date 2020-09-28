@@ -22,13 +22,21 @@ class Confirm extends Base {
     this.#ain.provider.setDefaultTimeoutMs(60 * 1000);
   }
 
-  async requestTxHashList(from, to) {
-    const txHashList = [];
+  async requestTransactionList(from, to) {
+    const transactionList = [];
     for (let number = from; number <= to; number++) {
       const block = await this.#ain.getBlock(number, true);
-      txHashList.push(...block.transactions.map(it => it.hash));
+      transactionList.push(...block.transactions.map(tx => {
+        return {
+          blockNumber: tx.block_number,
+          hash: tx.hash,
+          nonce: tx.nonce,
+          timestamp: tx.timestamp,
+          operation: tx.operation,
+        };
+      }));
     }
-    return txHashList;
+    return transactionList;
   }
 
   async calculateDuration(from, to) {
@@ -40,14 +48,15 @@ class Confirm extends Base {
   async process() {
     const startBlockNumber = this.config.startBlockNumber;
     const finishBlockNumber = this.config.finishBlockNumber;
-    const txHashListInRange = await this.requestTxHashList(startBlockNumber, finishBlockNumber);
+    const transactionList = await this.requestTransactionList(startBlockNumber, finishBlockNumber);
     const duration = await this.calculateDuration(startBlockNumber, finishBlockNumber);
-    const tps = txHashListInRange.length / (duration / 1000);
+    const tps = transactionList.length / (duration / 1000);
 
     this.output.statistics.tps = tps;
     this.output.statistics.duration = duration;
     this.output.statistics.startBlockNumber = startBlockNumber;
     this.output.statistics.finishBlockNumber = finishBlockNumber;
+    this.output.transactionList = transactionList;
 
     return this.output;
   }
