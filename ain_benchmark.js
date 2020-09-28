@@ -2,6 +2,7 @@ const axios = require('axios');
 const fs = require('fs');
 const { JobStatus, JobType } = require('./constants');
 const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
+const debugMode = !!process.env.DEBUG;
 
 function checkArgs() {
   if (process.argv.length !== 3) {
@@ -286,7 +287,9 @@ async function main() {
   await waitJob(testList, 1);
 
   printResult(testList);
-  await clear(testList);
+  if (!debugMode) {
+    await clear(testList);
+  }
 }
 
 main().catch(err => {
