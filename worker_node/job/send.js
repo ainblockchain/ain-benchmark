@@ -96,20 +96,20 @@ class Send extends Base {
 
     await delay(2 * BLOCK_TIME);
 
-    const writePermission = await this.#ain.db.ref(path).evalRule({value: null});
+    const writePermission = await this.#ain.db.ref(path).evalRule({ value: null });
     if (!writePermission) {
       throw Error(`Can't write database (permission)`);
     }
   }
 
-  makeTransaction(number) {
+  makeBaseTransaction() {
     return {
       operation: {
         ...this.config.transactionOperation,
       },
       nonce: -1,
-      timestamp: this.config.timestamp + number,
-    }
+      timestamp: this.config.timestamp,
+    };
   }
 
   async sendTxs() {
@@ -120,6 +120,9 @@ class Send extends Base {
       this.config.timestamp = Date.now();
     }
 
+    const baseTimestamp = this.config.timestamp;
+    const baseTx = this.makeBaseTransaction();
+
     for (let i = 0; i < this.config.numberOfTransactions; i++) {
       await delay(delayTime);
 
@@ -128,19 +131,21 @@ class Send extends Base {
         continue;
       }
 
-      const tx = this.makeTransaction(i);
       sendTxPromiseList.push(
           new Promise((resolve, reject) => {
-            this.#ain.sendTransaction(tx).then(result => {
-              if (!result || !result.hasOwnProperty('txHash')) {
-                throw Error(`Wrong format`);
-              } else if (!result.result) {
-                throw Error('result !== true');
-              }
-              resolve(result.txHash);
-            }).catch(err => {
-              resolve(err);
-            });
+            setTimeout((timestamp) => {
+              baseTx.timestamp = timestamp;
+              this.#ain.sendTransaction(baseTx).then(result => {
+                if (!result || !result.hasOwnProperty('txHash')) {
+                  throw Error(`Wrong format`);
+                } else if (!result.result) {
+                  throw Error('result !== true');
+                }
+                resolve(result.txHash);
+              }).catch(err => {
+                resolve(err);
+              });
+            }, 0, baseTimestamp + i);
           }),
       );
     }
