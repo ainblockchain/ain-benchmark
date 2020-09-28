@@ -42,11 +42,13 @@ class Confirm extends Base {
     const startBlockNumber = this.config.startBlockNumber;
     const finishBlockNumber = this.config.finishBlockNumber;
     const txHashListInRange = await this.requestTxHashList(startBlockNumber, finishBlockNumber);
-    const durationInRange = await this.calculateDuration(startBlockNumber, finishBlockNumber);
-    const tps = txHashListInRange.length / (durationInRange / 1000);
+    const duration = await this.calculateDuration(startBlockNumber, finishBlockNumber);
+    const tps = txHashListInRange.length / (duration / 1000);
 
     this.output.statistics.tps = tps;
-    this.output.statistics.durationInRange = durationInRange;
+    this.output.statistics.duration = duration;
+    this.output.statistics.startBlockNumber = startBlockNumber;
+    this.output.statistics.finishBlockNumber = finishBlockNumber;
 
     return this.output;
   }
