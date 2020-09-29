@@ -165,6 +165,8 @@ function addConfirmJob(testList) {
         ainUrl: test.config.ainUrl,
         startBlockNumber: test.jobList[prevJobIndex].output.startBlockNumber,
         finishBlockNumber: test.jobList[prevJobIndex].output.finishBlockNumber,
+        transactionOperationRef: test.jobList[prevJobIndex].input.config.transactionOperation.ref,
+        sendSuccess: test.jobList[prevJobIndex].output.statistics.success,
       };
     } catch (err) {
       job.status = JobStatus.PASS;
