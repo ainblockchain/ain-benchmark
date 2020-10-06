@@ -1,5 +1,5 @@
 const axios = require('axios');
-const TIMEOUT_MS = 30 * 1000;
+const TIMEOUT_MS = 60 * 1000;
 
 async function request(config) {
   try {
