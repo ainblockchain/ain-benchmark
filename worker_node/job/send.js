@@ -1,7 +1,7 @@
 const Base = require('./base');
 const Ain = require('@ainblockchain/ain-js').default;
 const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
-const axios = require('axios');
+const request = require('../../util/request');
 const BLOCK_TIME = process.env.BLOCK_TIME || 8000;
 const REQUEST_THRESHOLD = process.env.REQUEST_THRESHOLD || 100; // When the threshold is reached, request is temporarily stopped
 const RETRY_THRESHOLD = 3;
@@ -27,7 +27,6 @@ class Send extends Base {
         pass: 0,
         duration: 0,
       },
-      txHashList: [],
       startBlockNumber: 0,
       finishBlockNumber: 0,
     };
@@ -37,9 +36,6 @@ class Send extends Base {
     this.#ain.wallet.setDefaultAccount(this.config.ainAddress);
     this.#ain.provider.setDefaultTimeoutMs(60 * 1000);
 
-    // TODO: remove
-    this.httpClient = axios.create();
-    this.httpClient.defaults.timeout = 60 * 1000;
   }
 
   async getRecentBlockInformation(keyList) {
@@ -96,25 +92,40 @@ class Send extends Base {
       },
       nonce: -1,
     };
+    const setValueTx = {
+      operation: {
+        type: 'SET_VALUE',
+        ref: path,
+        value: 0,
+        is_global: true
+      },
+      nonce: -1,
+    };
     await this.#ain.sendTransactionBatch([
       setOwnerTx,
       setRuleTx,
+      setValueTx,
     ]);
 
     await delay(2 * BLOCK_TIME);
 
     // TODO: update ain-js to support is_global and use ain-js here
-    const response = await this.httpClient.post(this.config.ainUrl + 'json-rpc', {
-      method: 'ain_evalRule',
-      params: {
-        ref: path,
-        value: null,
-        address: this.config.ainAddress,
-        is_global: true,
-        protoVer: '0.1.0'
-      },
-      jsonrpc: '2.0',
-      id: 0
+    const response = await request({
+      method: 'post',
+      baseURL: this.config.ainUrl,
+      url: '/json-rpc',
+      data: {
+        method: 'ain_evalRule',
+        params: {
+          ref: path,
+          value: null,
+          address: this.config.ainAddress,
+          is_global: true,
+          protoVer: '0.1.0'
+        },
+        jsonrpc: '2.0',
+        id: 0
+      }
     });
     if (!response.data.result.result) {
       throw Error(`Can't write database (permission)`);
@@ -187,6 +198,10 @@ class Send extends Base {
     await this.initPermission();
 
     const startBlock = await this.getRecentBlockInformation(['timestamp', 'number']);
+    if (!startBlock.number) {
+      throw Error(`Genesis block was not created! (current block number: ${startBlock.number})`);
+    }
+
     const sendResultList = await this.sendTxs();
     const txHashList = this.checkSendResultList(sendResultList);
     await delay(BLOCK_TIME);

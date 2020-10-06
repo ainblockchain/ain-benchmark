@@ -1,8 +1,16 @@
-const axios = require('axios');
+const request = require('./util/request');
 const fs = require('fs');
+const moment = require('moment-timezone');
 const { JobStatus, JobType } = require('./constants');
 const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 const debugMode = !!process.env.DEBUG;
+const resultDir = `result_${moment().tz('Asia/Seoul').format('MM-DD_HH:mm:SS')}`;
+
+function initResultDirectory() {
+  if (!fs.existsSync(resultDir)) {
+    fs.mkdirSync(resultDir);
+  }
+}
 
 function checkArgs() {
   if (process.argv.length !== 3) {
@@ -32,27 +40,6 @@ function makeTestList(benchmarkConfig) {
   }
 
   return testList;
-}
-
-async function request(config) {
-  try {
-    const response = await axios({
-      maxContentLength: Infinity,
-      maxBodyLength: Infinity,
-      timeout: 30 * 1000,
-      ...config,
-    });
-    return {
-      status: response.status,
-      data: response.data,
-    };
-  } catch (err) {
-    if (!!err.response) { // Status isn't 2XX
-      throw Error(`status: ${err.response.status}, data: ${JSON.stringify(err.response.data)}`);
-    } else { // Timeout || Something wrong
-      throw err;
-    }
-  }
 }
 
 async function requestJob(job) {
@@ -177,7 +164,8 @@ function addConfirmJob(testList) {
         ainUrl: test.config.ainUrl,
         startBlockNumber: test.jobList[prevJobIndex].output.startBlockNumber,
         finishBlockNumber: test.jobList[prevJobIndex].output.finishBlockNumber,
-        txHashList: test.jobList[prevJobIndex].output.txHashList,
+        transactionOperationRef: test.jobList[prevJobIndex].input.config.transactionOperation.ref,
+        sendSuccess: test.jobList[prevJobIndex].output.statistics.success,
       };
     } catch (err) {
       job.status = JobStatus.PASS;
@@ -259,6 +247,42 @@ function printResult(testList) {
   console.log(`Total TPS: ${calculateTotalTps(tpsList)}`);
 }
 
+function writeJsonlFile(filename, dataList) {
+  return new Promise((resolve, reject) => {
+    const writeStream = fs.createWriteStream(filename);
+
+    writeStream.on('finish', _ => {
+      resolve(dataList.length);
+    });
+
+    writeStream.on('error', err => {
+      reject(err);
+    });
+
+    for (const data of dataList) {
+      writeStream.write(`${JSON.stringify(data)}\n`);
+    }
+
+    writeStream.end();
+  });
+}
+
+async function writeResult(testList) {
+  for (const [i, test] of testList.entries()) {
+    const confirmJob = test.jobList[1];
+    if (confirmJob.status !== JobStatus.SUCCESS) {
+      continue;
+    }
+
+    const testDir = resultDir + `/s${(i + 1).toString().padStart(2, '0')}`; // s01, s02 ...
+    const transactionsFile = testDir + `/transactions.jsonl`;
+    fs.mkdirSync(testDir);
+    await writeJsonlFile(transactionsFile, confirmJob.output.transactionList);
+    confirmJob.output.transactionList = undefined;
+    await delay(1000);
+  }
+}
+
 async function clear(testList) {
   for (const test of testList) {
     for (let i = 0; i < 2; i++) {
@@ -271,7 +295,6 @@ async function clear(testList) {
       } catch (err) {
         console.log(`Fail to delete job (${err.message})`);
       }
-
     }
   }
 }
@@ -280,6 +303,7 @@ async function main() {
   checkArgs();
   const benchmarkConfig = readFile(process.argv[2]);
   const testList = makeTestList(benchmarkConfig);
+  initResultDirectory();
 
   await processSendJob(testList);
   await waitJob(testList, 0);
@@ -287,6 +311,7 @@ async function main() {
   await waitJob(testList, 1);
 
   printResult(testList);
+  await writeResult(testList);
   if (!debugMode) {
     await clear(testList);
   }

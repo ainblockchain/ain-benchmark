@@ -1,12 +1,12 @@
 const Base = require('./base');
 const Ain = require('@ainblockchain/ain-js').default;
+const request = require('../../util/request');
 
 class Confirm extends Base {
   static configProps = [
     'ainUrl',
     'startBlockNumber',
     'finishBlockNumber',
-    'txHashList',
   ];
   #ain;
 
@@ -16,20 +16,28 @@ class Confirm extends Base {
       message: '',
       statistics: {
         tps: null,
-        lossRate: null, // TODO(sanghee)
+        lossRate: null,
       },
     };
     this.#ain = new Ain(this.config.ainUrl);
     this.#ain.provider.setDefaultTimeoutMs(60 * 1000);
   }
 
-  async requestTxHashList(from, to) {
-    const txHashList = [];
+  async requestTransactionList(from, to) {
+    const transactionList = [];
     for (let number = from; number <= to; number++) {
       const block = await this.#ain.getBlock(number, true);
-      txHashList.push(...block.transactions.map(it => it.hash));
+      transactionList.push(...block.transactions.map(tx => {
+        return {
+          blockNumber: number,
+          hash: tx.hash,
+          nonce: tx.nonce,
+          timestamp: tx.timestamp,
+          operation: tx.operation,
+        };
+      }));
     }
-    return txHashList;
+    return transactionList;
   }
 
   async calculateDuration(from, to) {
@@ -38,17 +46,51 @@ class Confirm extends Base {
     return finishTime - startTime; // ms
   }
 
+  async calculateLossRate() {
+    const ref = this.config.transactionOperationRef;
+    if (!ref) {
+      return null;
+    }
+    const response = await request({
+      method: 'post',
+      baseURL: this.config.ainUrl,
+      url: '/json-rpc',
+      data: {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'ain_get',
+        params: {
+          type: 'GET_VALUE',
+          ref: ref,
+          is_global: true,
+          protoVer: '0.1.0'
+        },
+      }
+    });
+
+    const sendSuccess = this.config.sendSuccess;
+    const count = response.data.result.result;
+    if (!count) {
+      return null;
+    }
+
+    return (1 - (count / sendSuccess)).toFixed(5) * 100 + '%';
+  }
+
   async process() {
     const startBlockNumber = this.config.startBlockNumber;
     const finishBlockNumber = this.config.finishBlockNumber;
-    const txHashListInRange = await this.requestTxHashList(startBlockNumber, finishBlockNumber);
+    const transactionList = await this.requestTransactionList(startBlockNumber, finishBlockNumber);
     const duration = await this.calculateDuration(startBlockNumber, finishBlockNumber);
-    const tps = txHashListInRange.length / (duration / 1000);
+    const tps = transactionList.length / (duration / 1000);
+    const lossRate = await this.calculateLossRate();
 
     this.output.statistics.tps = tps;
+    this.output.statistics.lossRate = lossRate;
     this.output.statistics.duration = duration;
     this.output.statistics.startBlockNumber = startBlockNumber;
     this.output.statistics.finishBlockNumber = finishBlockNumber;
+    this.output.transactionList = transactionList;
 
     return this.output;
   }
