@@ -248,6 +248,40 @@ function printResult(testList) {
   console.log(`Total TPS: ${calculateTotalTps(tpsList)}`);
 }
 
+function writeJsonlFile(filename, dataList) {
+  return new Promise((resolve, reject) => {
+    const writeStream = fs.createWriteStream(filename);
+
+    writeStream.on('finish', _ => {
+      resolve(dataList.length);
+    });
+
+    writeStream.on('error', err => {
+      reject(err);
+    });
+
+    for (const data of dataList) {
+      writeStream.write(`${JSON.stringify(data)}\n`);
+    }
+
+    writeStream.end();
+  });
+}
+
+async function writeResult(testList) {
+  for (const [i, test] of testList.entries()) {
+    const confirmJob = test.jobList[1];
+    if (confirmJob.status !== JobStatus.SUCCESS) {
+      continue;
+    }
+
+    const testDir = resultDir + `/s${(i + 1).toString().padStart(2, '0')}`; // s01, s02 ...
+    const transactionsFile = testDir + `/transactions.jsonl`;
+    fs.mkdirSync(testDir);
+    await writeJsonlFile(transactionsFile, confirmJob.output.transactionList);
+  }
+}
+
 async function clear(testList) {
   for (const test of testList) {
     for (let i = 0; i < 2; i++) {
@@ -260,7 +294,6 @@ async function clear(testList) {
       } catch (err) {
         console.log(`Fail to delete job (${err.message})`);
       }
-
     }
   }
 }
@@ -277,6 +310,7 @@ async function main() {
   await waitJob(testList, 1);
 
   printResult(testList);
+  await writeResult(testList);
   if (!debugMode) {
     await clear(testList);
   }
