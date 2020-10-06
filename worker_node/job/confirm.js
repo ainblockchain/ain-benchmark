@@ -29,7 +29,7 @@ class Confirm extends Base {
       const block = await this.#ain.getBlock(number, true);
       transactionList.push(...block.transactions.map(tx => {
         return {
-          blockNumber: tx.block_number,
+          blockNumber: number,
           hash: tx.hash,
           nonce: tx.nonce,
           timestamp: tx.timestamp,
