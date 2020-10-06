@@ -42,7 +42,6 @@ function makeTestList(benchmarkConfig) {
   return testList;
 }
 
-
 async function requestJob(job) {
   if (job.status === JobStatus.PASS) {
     return;
