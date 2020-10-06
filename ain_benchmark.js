@@ -278,6 +278,8 @@ async function writeResult(testList) {
     const transactionsFile = testDir + `/transactions.jsonl`;
     fs.mkdirSync(testDir);
     await writeJsonlFile(transactionsFile, confirmJob.output.transactionList);
+    confirmJob.output.transactionList = undefined;
+    await delay(1000);
   }
 }
 
