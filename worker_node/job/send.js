@@ -207,10 +207,10 @@ class Send extends Base {
     await delay(BLOCK_TIME);
     const finishBlock = await this.getRecentBlockInformation(['timestamp', 'number']);
 
-    this.output.statistics.duration = finishBlock.timestamp - startBlock.timestamp;
     this.output.txHashList = txHashList;
     this.output.startBlockNumber = startBlock.number;
     this.output.finishBlockNumber = finishBlock.number;
+    this.output.statistics.blockDuration = finishBlock.timestamp - startBlock.timestamp;
     if (this.config.numberOfTransactions && this.output.statistics.success === 0) {
       throw Error('Success rate 0%');
     }
