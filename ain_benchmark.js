@@ -79,7 +79,7 @@ async function requestToDeleteJob(job) {
 }
 
 async function processJob(testList, jobIndex) {
-  console.log(`Start to process '${testList[0].jobList[jobIndex].input.type}' job`);
+  console.log(`- Start to process '${testList[0].jobList[jobIndex].input.type}' job`);
   for (const test of testList) {
     await requestJob(test.jobList[jobIndex]);
   }
@@ -189,65 +189,50 @@ async function processConfirmJob(testList) {
 }
 
 function printJobResult(testList, jobIndex) {
-  console.log(`\n'${testList[0].jobList[jobIndex].input.type}' job result`);
+  console.log(`\n- Finish '${testList[0].jobList[jobIndex].input.type}' job`);
   for (const [i, test] of testList.entries()) {
     const job = test.jobList[jobIndex];
     let additionalInfo = '';
     if (job.status === JobStatus.SUCCESS) {
-      additionalInfo = `(${JSON.stringify(job.output.statistics)})`;
+      if (job.input.type === JobType.SEND) {
+        additionalInfo = `, send: ${job.output.statistics.success}` +
+            `, pass: ${job.output.statistics.pass}` +
+            `, error: ${job.output.statistics.error}` +
+            `, startBlockNumber: ${job.output.startBlockNumber}` +
+            `, finishBlockNumber: ${job.output.finishBlockNumber}`;
+      } else if (job.input.type === JobType.CONFIRM) {
+        additionalInfo = `, tps: ${job.output.statistics.tps}` +
+            `, lossRate: ${job.output.statistics.lossRate}` +
+            `, blockDuration: ${job.output.statistics.blockDuration}`;
+      }
     } else if (job.status === JobStatus.FAIL) {
-      additionalInfo = `(${job.output.message})`;
+      additionalInfo = `, error message: ${job.output.message})`;
     }
-    console.log(`[Worker ${i + 1}] ${job.status} ${additionalInfo}`);
+    console.log(`[Worker ${i + 1}] status: ${job.status}, target: ${test.config.ainUrl}${additionalInfo}`);
   }
   console.log('');
 }
 
-function getTpsList(testList) {
-  const tpsList = {};
-  for (const test of testList) {
+function printTestResult(testList) {
+  console.log(`- Finish all jobs`);
+  console.log(`\n- Statistics of TPS`);
+
+  let totalTps = 0;
+
+  for (const [i, test] of testList.entries()) {
     const confirmJob = test.jobList[1];
     const ainUrl = test.config.ainUrl;
-    tpsList[ainUrl] = 0;
+    let tps = null;
 
     if (confirmJob.status === JobStatus.SUCCESS) {
-      const tps = confirmJob.output.statistics.tps;
-      if (!tpsList[ainUrl] || tpsList[ainUrl] < tps) {
-        tpsList[ainUrl] = tps;
-      }
+      tps = confirmJob.output.statistics.tps;
+      totalTps += tps;
     }
-  }
-  return tpsList;
-}
-
-function calculateTotalTps(tpsList) {
-  return Object.keys(tpsList).reduce((acc, cur) => {
-    acc += tpsList[cur];
-    return acc;
-  }, 0);
-}
-
-function printTestResult(testList) {
-  console.log(`Finish all jobs`);
-
-  for (const test of testList) {
-    console.log(`\n[Worker: ${test.jobList[0].workerUrl}, AIN: ${test.config.ainUrl}]`);
-
-    for (let i = 0; i < 2; i++) {
-      const job = test.jobList[i];
-      if (job.status === JobStatus.SUCCESS) {
-        console.log(`Type: ${job.input.type}, Status: ${job.status}, ` +
-            `Statistics: ${JSON.stringify(job.output.statistics)}`);
-      } else {
-        console.log(`Type: ${job.input.type}, Status: ${job.status}, Error message: ${job.output.message}`);
-      }
-    }
+    console.log(`Shard ${i + 1} TPS: ${Number(tps).toFixed(5)} (${confirmJob.output.statistics.transactionCount} txs ` +
+        `/ ${confirmJob.output.statistics.blockDuration / 1000} secs) [${ainUrl}]`);
   }
 
-  console.log(`\nStatistics of TPS`);
-  const tpsList = getTpsList(testList);
-  console.log(JSON.stringify(tpsList, null, 4));
-  console.log(`Total TPS: ${calculateTotalTps(tpsList)}`);
+  console.log(`\nTotal TPS: ${totalTps.toFixed(5)}`);
 }
 
 function writeJsonlFile(filename, dataList) {
@@ -296,7 +281,7 @@ async function clear(testList) {
       try {
         await requestToDeleteJob(job);
       } catch (err) {
-        console.log(`Fail to delete job (${err.message})`);
+        console.log(`- Fail to delete job (${err.message})`);
       }
     }
   }
