@@ -90,6 +90,7 @@ class Confirm extends Base {
     this.output.statistics.duration = duration;
     this.output.statistics.startBlockNumber = startBlockNumber;
     this.output.statistics.finishBlockNumber = finishBlockNumber;
+    this.output.statistics.transactionCount = transactionList.length;
     this.output.transactionList = transactionList;
 
     return this.output;
