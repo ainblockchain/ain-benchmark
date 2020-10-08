@@ -25,7 +25,7 @@ class Send extends Base {
         success: 0,
         error: 0,
         pass: 0,
-        duration: 0,
+        blockDuration: 0,
       },
       startBlockNumber: 0,
       finishBlockNumber: 0,
