@@ -79,16 +79,15 @@ async function requestToDeleteJob(job) {
 }
 
 async function processJob(testList, jobIndex) {
-  console.log(`Start to process '${testList[0].jobList[jobIndex].input.type}'`);
+  console.log(`Start to process '${testList[0].jobList[jobIndex].input.type}' job`);
   for (const test of testList) {
     await requestJob(test.jobList[jobIndex]);
   }
-  printStatus(testList, jobIndex);
 }
 
 async function waitJob(testList, jobIndex) {
-  console.log(`Wait to finish '${testList[0].jobList[jobIndex].input.type}'`);
   let unfinishedCount;
+  const jobType = testList[0].jobList[jobIndex].input.type;
 
   do {
     unfinishedCount = 0;
@@ -117,9 +116,13 @@ async function waitJob(testList, jobIndex) {
         job.output.message = err.message;
       }
     }
-    await delay(5000);
-  } while (unfinishedCount);
-  printStatus(testList, jobIndex);
+    if (unfinishedCount === 0) {
+      break;
+    }
+    console.log(`${unfinishedCount} workers are still processing '${jobType}' job ` +
+        `(${testList.length - unfinishedCount}/${testList.length})`);
+    await delay(10000);
+  } while (true);
 }
 
 function addSendJob(testList) {
@@ -185,19 +188,19 @@ async function processConfirmJob(testList) {
   await processJob(testList, 1);
 }
 
-function printStatus(testList, index) {
-  for (const test of testList) {
-    const job = test.jobList[index];
-
+function printJobResult(testList, jobIndex) {
+  console.log(`\n'${testList[0].jobList[jobIndex].input.type}' job result`);
+  for (const [i, test] of testList.entries()) {
+    const job = test.jobList[jobIndex];
     let additionalInfo = '';
-
     if (job.status === JobStatus.SUCCESS) {
       additionalInfo = `(${JSON.stringify(job.output.statistics)})`;
     } else if (job.status === JobStatus.FAIL) {
       additionalInfo = `(${job.output.message})`;
     }
-    console.log(`[Worker: ${job.workerUrl}, AIN: ${test.config.ainUrl}] ${job.status} ${additionalInfo}`);
+    console.log(`[Worker ${i + 1}] ${job.status} ${additionalInfo}`);
   }
+  console.log('');
 }
 
 function getTpsList(testList) {
@@ -224,7 +227,7 @@ function calculateTotalTps(tpsList) {
   }, 0);
 }
 
-function printResult(testList) {
+function printTestResult(testList) {
   console.log(`Finish all jobs`);
 
   for (const test of testList) {
@@ -267,7 +270,7 @@ function writeJsonlFile(filename, dataList) {
   });
 }
 
-async function writeResult(testList) {
+async function writeTestResult(testList) {
   for (const [i, test] of testList.entries()) {
     const confirmJob = test.jobList[1];
     if (confirmJob.status !== JobStatus.SUCCESS) {
@@ -305,13 +308,20 @@ async function main() {
   const testList = makeTestList(benchmarkConfig);
   initResultDirectory();
 
+  // 'SEND' job
   await processSendJob(testList);
   await waitJob(testList, 0);
+  printJobResult(testList, 0);
+
+  // 'CONFIRM' job
   await processConfirmJob(testList);
   await waitJob(testList, 1);
+  printJobResult(testList, 1);
 
-  printResult(testList);
-  await writeResult(testList);
+  // Output
+  printTestResult(testList);
+  await writeTestResult(testList);
+
   if (!debugMode) {
     await clear(testList);
   }
