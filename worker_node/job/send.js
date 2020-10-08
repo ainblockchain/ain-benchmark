@@ -204,7 +204,7 @@ class Send extends Base {
 
     const sendResultList = await this.sendTxs();
     const txHashList = this.checkSendResultList(sendResultList);
-    await delay(BLOCK_TIME);
+    await delay(BLOCK_TIME * 3);
     const finishBlock = await this.getRecentBlockInformation(['timestamp', 'number']);
 
     this.output.txHashList = txHashList;
