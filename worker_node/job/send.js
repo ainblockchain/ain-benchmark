@@ -25,7 +25,7 @@ class Send extends Base {
         success: 0,
         error: 0,
         pass: 0,
-        duration: 0,
+        blockDuration: 0,
       },
       startBlockNumber: 0,
       finishBlockNumber: 0,
@@ -204,13 +204,13 @@ class Send extends Base {
 
     const sendResultList = await this.sendTxs();
     const txHashList = this.checkSendResultList(sendResultList);
-    await delay(BLOCK_TIME);
+    await delay(BLOCK_TIME * 3);
     const finishBlock = await this.getRecentBlockInformation(['timestamp', 'number']);
 
-    this.output.statistics.duration = finishBlock.timestamp - startBlock.timestamp;
     this.output.txHashList = txHashList;
     this.output.startBlockNumber = startBlock.number;
     this.output.finishBlockNumber = finishBlock.number;
+    this.output.statistics.blockDuration = finishBlock.timestamp - startBlock.timestamp;
     if (this.config.numberOfTransactions && this.output.statistics.success === 0) {
       throw Error('Success rate 0%');
     }

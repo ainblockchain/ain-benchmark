@@ -81,15 +81,16 @@ class Confirm extends Base {
     const startBlockNumber = this.config.startBlockNumber;
     const finishBlockNumber = this.config.finishBlockNumber;
     const transactionList = await this.requestTransactionList(startBlockNumber, finishBlockNumber);
-    const duration = await this.calculateDuration(startBlockNumber, finishBlockNumber);
-    const tps = transactionList.length / (duration / 1000);
+    const blockDuration = await this.calculateDuration(startBlockNumber, finishBlockNumber);
+    const tps = transactionList.length / (blockDuration / 1000);
     const lossRate = await this.calculateLossRate();
 
     this.output.statistics.tps = tps;
     this.output.statistics.lossRate = lossRate;
-    this.output.statistics.duration = duration;
+    this.output.statistics.blockDuration = blockDuration;
     this.output.statistics.startBlockNumber = startBlockNumber;
     this.output.statistics.finishBlockNumber = finishBlockNumber;
+    this.output.statistics.transactionCount = transactionList.length;
     this.output.transactionList = transactionList;
 
     return this.output;
