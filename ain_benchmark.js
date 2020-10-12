@@ -5,6 +5,7 @@ const { JobStatus, JobType } = require('./constants');
 const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 const debugMode = !!process.env.DEBUG;
 const resultDir = `result_${moment().tz('Asia/Seoul').format('MM-DD_HH:mm:SS')}`;
+const startTime = new Date().getTime();
 
 function initResultDirectory() {
   if (!fs.existsSync(resultDir)) {
@@ -42,6 +43,10 @@ function makeTestList(benchmarkConfig) {
   return testList;
 }
 
+function getRunningTime() {
+  return moment(new Date().getTime() - startTime).format('mm:ss');
+}
+
 async function requestJob(job) {
   if (job.status === JobStatus.PASS) {
     return;
@@ -57,7 +62,7 @@ async function requestJob(job) {
     job.status = JobStatus.PROGRESS;
     job.id = response.data.id;
   } catch (err) {
-    console.log(err.message);
+    console.log(`Error while request job (${err.message})`);
     job.status = JobStatus.FAIL;
     job.output.message = err.message;
   }
@@ -120,7 +125,7 @@ async function waitJob(testList, jobIndex) {
       break;
     }
     console.log(`${unfinishedCount} workers are still processing '${jobType}' job ` +
-        `(${testList.length - unfinishedCount}/${testList.length})`);
+        `(${testList.length - unfinishedCount}/${testList.length}) [${getRunningTime()}]`);
     await delay(10000);
   } while (true);
 }
@@ -189,7 +194,7 @@ async function processConfirmJob(testList) {
 }
 
 function printJobResult(testList, jobIndex) {
-  console.log(`\n- Finish '${testList[0].jobList[jobIndex].input.type}' job`);
+  console.log(`\n- Finish '${testList[0].jobList[jobIndex].input.type}' job [${getRunningTime()}]`);
   for (const [i, test] of testList.entries()) {
     const job = test.jobList[jobIndex];
     let additionalInfo = '';
@@ -214,7 +219,7 @@ function printJobResult(testList, jobIndex) {
 }
 
 function printTestResult(testList) {
-  console.log(`- Finish all jobs`);
+  console.log(`- Finish all jobs [${getRunningTime()}]`);
   console.log(`\n- Statistics of TPS`);
 
   let totalTps = 0;
@@ -228,8 +233,13 @@ function printTestResult(testList) {
       tps = confirmJob.output.statistics.tps;
       totalTps += tps;
     }
-    console.log(`Shard ${i + 1} TPS: ${Number(tps).toFixed(5)} (${confirmJob.output.statistics.transactionCount} txs ` +
-        `/ ${confirmJob.output.statistics.blockDuration / 1000} secs) [${ainUrl}]`);
+    if (confirmJob.status !== JobStatus.SUCCESS) {
+      console.log(`[Shard ${i + 1}] Error: ${confirmJob.output.message} [${ainUrl}]`);
+    } else {
+      console.log(`[Shard ${i + 1}] TPS: ${Number(tps).toFixed(5)} ` +
+          `(${confirmJob.output.statistics.transactionCount} txs ` +
+          `/ ${confirmJob.output.statistics.blockDuration / 1000} secs) [${ainUrl}]`);
+    }
   }
 
   console.log(`\nTotal TPS: ${totalTps.toFixed(5)}`);
@@ -272,6 +282,7 @@ async function writeTestResult(testList) {
 }
 
 async function clear(testList) {
+  console.log(`\n- Request workers to cleanup data`);
   for (const test of testList) {
     for (let i = 0; i < 2; i++) {
       const job = test.jobList[i];
@@ -281,10 +292,11 @@ async function clear(testList) {
       try {
         await requestToDeleteJob(job);
       } catch (err) {
-        console.log(`- Fail to delete job (${err.message})`);
+        console.log(`Fail to cleanup data (${err.message}) [${test.config.ainUrl}]`);
       }
     }
   }
+  console.log(`- Finish to cleanup data`);
 }
 
 async function main() {
