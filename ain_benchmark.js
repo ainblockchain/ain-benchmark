@@ -281,10 +281,12 @@ async function writeTestResult(testList) {
     confirmJob.output.transactionList = undefined;
     await delay(1000);
   }
+
+  console.log(`- Save result in '${resultDir}'`);
 }
 
 async function clear(testList) {
-  console.log(`\n- Request workers to cleanup data`);
+  console.log(`- Request workers to cleanup data`);
   for (const test of testList) {
     for (let i = 0; i < 2; i++) {
       const job = test.jobList[i];
