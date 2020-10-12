@@ -233,16 +233,18 @@ function printTestResult(testList) {
       tps = confirmJob.output.statistics.tps;
       totalTps += tps;
     }
+    console.log(`[Shard ${i + 1}] endpoint: ${ainUrl}, path: ${test.config.transactionOperation.ref}`);
     if (confirmJob.status !== JobStatus.SUCCESS) {
-      console.log(`[Shard ${i + 1}] Error: ${confirmJob.output.message} [${ainUrl}]`);
+      console.log(`Error: ${confirmJob.output.message} [${ainUrl}]`);
     } else {
-      console.log(`[Shard ${i + 1}] TPS: ${Number(tps).toFixed(5)} ` +
+      console.log(`TPS: ${Number(tps).toFixed(5)} ` +
           `(${confirmJob.output.statistics.transactionCount} txs ` +
-          `/ ${confirmJob.output.statistics.blockDuration / 1000} secs) [${ainUrl}]`);
+          `/ ${confirmJob.output.statistics.blockDuration / 1000} secs)`);
     }
+    console.log();
   }
 
-  console.log(`\nTotal TPS: ${totalTps.toFixed(5)}`);
+  console.log(`Total TPS: ${totalTps.toFixed(5)}`);
 }
 
 function writeJsonlFile(filename, dataList) {
