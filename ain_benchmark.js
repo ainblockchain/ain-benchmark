@@ -280,7 +280,6 @@ async function writeTestResult(testList) {
     confirmJob.output.transactionList = undefined;
     await delay(1000);
   }
-
   console.log(`- Save result in '${resultDir}'`);
 }
 
