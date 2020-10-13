@@ -193,6 +193,18 @@ async function processConfirmJob(testList) {
   await processJob(testList, 1);
 }
 
+function getNumberOfPaths(testList) {
+  if (!testList) {
+    return 0;
+  }
+  const pathTable = {};
+  for (const test of testList) {
+    const path = test.config.transactionOperation.ref;
+    pathTable[path] = true;
+  }
+  return Object.keys(pathTable).length;
+}
+
 function printJobResult(testList, jobIndex) {
   console.log(`\n- Finish '${testList[0].jobList[jobIndex].input.type}' job [${getRunningTime()}]`);
   for (const [i, test] of testList.entries()) {
@@ -223,6 +235,7 @@ function printTestResult(testList) {
   console.log(`\n- Statistics of TPS`);
 
   let totalTps = 0;
+  const numberOfPaths = getNumberOfPaths(testList);
 
   for (const [i, test] of testList.entries()) {
     const confirmJob = test.jobList[1];
@@ -244,6 +257,7 @@ function printTestResult(testList) {
     console.log();
   }
   console.log(`Total TPS: ${totalTps.toFixed(5)} (X)`);
+  console.log(`Number of paths in state database: ${numberOfPaths} (Y)`);
 }
 
 function writeJsonlFile(filename, dataList) {
