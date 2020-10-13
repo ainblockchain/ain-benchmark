@@ -7,6 +7,10 @@ const debugMode = !!process.env.DEBUG;
 const resultDir = `result_${moment().tz('Asia/Seoul').format('MM-DD_HH:mm:SS')}`;
 const startTime = new Date().getTime();
 
+process.on('uncaughtException', (err) => {
+  console.log(`uncaughtException: ${JSON.stringify(err, null, 2)}`);
+});
+
 function initResultDirectory() {
   if (!fs.existsSync(resultDir)) {
     fs.mkdirSync(resultDir);
