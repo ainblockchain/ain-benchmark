@@ -243,7 +243,7 @@ function printTestResult(testList) {
     }
     console.log();
   }
-  console.log(`Total TPS: ${totalTps.toFixed(5)}`);
+  console.log(`Total TPS: ${totalTps.toFixed(5)} (X)`);
 }
 
 function writeJsonlFile(filename, dataList) {
