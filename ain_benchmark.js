@@ -243,7 +243,6 @@ function printTestResult(testList) {
     }
     console.log();
   }
-
   console.log(`Total TPS: ${totalTps.toFixed(5)}`);
 }
 
