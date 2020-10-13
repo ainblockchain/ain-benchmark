@@ -193,7 +193,7 @@ async function processConfirmJob(testList) {
   await processJob(testList, 1);
 }
 
-function getNumberOfPaths(testList) {
+function getNumberOfShards(testList) {
   if (!testList) {
     return 0;
   }
@@ -235,7 +235,7 @@ function printTestResult(testList) {
   console.log(`\n- Statistics of TPS`);
 
   let totalTps = 0;
-  const numberOfPaths = getNumberOfPaths(testList);
+  const numberOfShards = getNumberOfShards(testList);
 
   for (const [i, test] of testList.entries()) {
     const confirmJob = test.jobList[1];
@@ -257,7 +257,7 @@ function printTestResult(testList) {
     console.log();
   }
   console.log(`Total TPS (X): ${totalTps.toFixed(5)}`);
-  console.log(`Number of paths in state database (Y): ${numberOfPaths}`);
+  console.log(`Number of shards (sharding paths) (Y): ${numberOfShards}`);
 }
 
 function writeJsonlFile(filename, dataList) {
