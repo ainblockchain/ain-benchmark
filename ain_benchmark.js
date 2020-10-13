@@ -256,8 +256,8 @@ function printTestResult(testList) {
     }
     console.log();
   }
-  console.log(`Total TPS: ${totalTps.toFixed(5)} (X)`);
-  console.log(`Number of paths in state database: ${numberOfPaths} (Y)`);
+  console.log(`Total TPS (X): ${totalTps.toFixed(5)}`);
+  console.log(`Number of paths in state database (Y): ${numberOfPaths}`);
 }
 
 function writeJsonlFile(filename, dataList) {
