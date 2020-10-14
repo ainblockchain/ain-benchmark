@@ -116,14 +116,24 @@ async function waitJob(testList, jobIndex) {
   const jobType = testList[0].jobList[jobIndex].input.type;
 
   do {
+    let testIndex = 0;
     for (const test of testList) {
       const job = test.jobList[jobIndex];
       if (job.status === JobStatus.PROGRESS) {
         await updateJobStatus(job);
         if (job.status !== JobStatus.PROGRESS) {
           finishedCount++;
+          if (job.type === JobType.CONFIRM) {
+            const testDir = resultDir + `/s${(testIndex + 1).toString().padStart(2, '0')}`; // s01, s02 ...
+            const transactionsFile = testDir + `/transactions.jsonl`;
+            fs.mkdirSync(testDir);
+            await writeJsonlFile(transactionsFile, job.output.transactionList);
+            job.output = null;
+            await delay(2000);
+          }
         }
       }
+      testIndex++;
     }
     console.log(`${testList.length - finishedCount} workers are still processing '${jobType}' job ` +
         `(${finishedCount}/${testList.length}) [${getRunningTime()}]`);
@@ -334,7 +344,7 @@ async function main() {
 
   // Output
   printTestResult(testList);
-  await writeTestResult(testList);
+  // await writeTestResult(testList);
 
   if (!debugMode) {
     await clear(testList);
