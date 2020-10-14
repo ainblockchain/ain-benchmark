@@ -123,12 +123,12 @@ async function waitJob(testList, jobIndex) {
         await updateJobStatus(job);
         if (job.status !== JobStatus.PROGRESS) {
           finishedCount++;
-          if (job.type === JobType.CONFIRM) {
+          if (job.input.type === JobType.CONFIRM) {
             const testDir = resultDir + `/s${(testIndex + 1).toString().padStart(2, '0')}`; // s01, s02 ...
             const transactionsFile = testDir + `/transactions.jsonl`;
             fs.mkdirSync(testDir);
             await writeJsonlFile(transactionsFile, job.output.transactionList);
-            job.output = null;
+            job.output.transactionList = null;
             await delay(2000);
           }
         }
