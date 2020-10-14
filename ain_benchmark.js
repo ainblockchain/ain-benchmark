@@ -90,44 +90,45 @@ async function processJob(testList, jobIndex) {
   }
 }
 
-async function waitJob(testList, jobIndex) {
-  let unfinishedCount;
-  const jobType = testList[0].jobList[jobIndex].input.type;
-
-  do {
-    unfinishedCount = 0;
-
-    for (const test of testList) {
-      const job = test.jobList[jobIndex];
-
-      if (job.status !== JobStatus.PROGRESS) {
-        continue;
-      }
-
+function updateJobStatus(job) {
+  return new Promise((resolve, reject) => {
+    setTimeout(async () => {
       try {
         const response = await request({
           method: 'get',
           baseURL: job.workerUrl,
           url: `/job/${job.id}`,
         });
-
         job.status = response.data.status;
         job.output = response.data.output;
-        if (job.status === JobStatus.PROGRESS) {
-          unfinishedCount++;
-        }
+        resolve();
       } catch (err) {
         job.status = JobStatus.FAIL;
         job.output.message = err.message;
+        reject(err);
+      }
+    }, 100);
+  });
+}
+
+async function waitJob(testList, jobIndex) {
+  let finishedCount = 0;
+  const jobType = testList[0].jobList[jobIndex].input.type;
+
+  do {
+    for (const test of testList) {
+      const job = test.jobList[jobIndex];
+      if (job.status === JobStatus.PROGRESS) {
+        await updateJobStatus(job);
+        if (job.status !== JobStatus.PROGRESS) {
+          finishedCount++;
+        }
       }
     }
-    if (unfinishedCount === 0) {
-      break;
-    }
-    console.log(`${unfinishedCount} workers are still processing '${jobType}' job ` +
-        `(${testList.length - unfinishedCount}/${testList.length}) [${getRunningTime()}]`);
+    console.log(`${testList.length - finishedCount} workers are still processing '${jobType}' job ` +
+        `(${finishedCount}/${testList.length}) [${getRunningTime()}]`);
     await delay(10000);
-  } while (true);
+  } while (finishedCount !== testList.length);
 }
 
 function addSendJob(testList) {
