@@ -236,7 +236,7 @@ function printJobResult(testList, jobIndex) {
 
 function printTestResult(testList) {
   console.log(`- Finish all jobs [${getRunningTime()}]`);
-  console.log(`\n- Statistics of TPS`);
+  console.log(`\n- Statistics`);
 
   let totalTps = 0;
   const numberOfShards = getNumberOfShards(testList);
@@ -257,6 +257,8 @@ function printTestResult(testList) {
       console.log(`TPS: ${Number(tps).toFixed(5)} ` +
           `(${confirmJob.output.statistics.transactionCount} txs ` +
           `/ ${confirmJob.output.statistics.blockDuration / 1000} secs)`);
+      console.log(`Loss Rate: ${confirmJob.output.statistics.lossRate}`);
+      console.log(`Confirmed time table: ${JSON.stringify(confirmJob.output.statistics.confirmedTimeTable, null, 2)}`); // TODO(csh): Delete after test
     }
     console.log();
   }
