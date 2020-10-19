@@ -1,6 +1,6 @@
 const Base = require('./base');
 const Ain = require('@ainblockchain/ain-js').default;
-const request = require('../../util/request');
+const TX_TIMEOUT_MS = process.env.TX_TIMEOUT_MS || 3000;
 
 class Confirm extends Base {
   static configProps = [
@@ -25,18 +25,39 @@ class Confirm extends Base {
 
   async requestTransactionList(from, to) {
     const transactionList = [];
+    let timeoutTxCount = 0;
+    let totalConfirmedTime = 0;
+    const confirmedTimeTable = {}; // TODO(csh): Delete after test
+
     for (let number = from; number <= to; number++) {
       const block = await this.#ain.getBlock(number, true);
-      transactionList.push(...block.transactions.map(tx => {
-        return {
+      transactionList.push(...block.transactions.reduce((acc, tx) => {
+        const confirmedTime = block.timestamp - tx.timestamp;
+        const confirmedTimeSecs = Math.round(confirmedTime / 1000);
+        if (!confirmedTimeTable[confirmedTimeSecs]) {
+          confirmedTimeTable[confirmedTimeSecs] = 1;
+        } else {
+          confirmedTimeTable[confirmedTimeSecs]++;
+        }
+        if (confirmedTime > TX_TIMEOUT_MS) {
+          timeoutTxCount++;
+        }
+        totalConfirmedTime += confirmedTime;
+        acc.push({
           blockNumber: number,
           hash: tx.hash,
           nonce: tx.nonce,
           timestamp: tx.timestamp,
           operation: tx.operation,
-        };
-      }));
+        });
+        return acc;
+      }, []));
     }
+    this.output.statistics.confirmedTimeAverage = transactionList.length ?
+        totalConfirmedTime / transactionList.length : 0;
+    this.output.statistics.lossRate = this.calculateLossRate(timeoutTxCount, transactionList.length);
+    this.output.statistics.confirmedTimeTable = confirmedTimeTable;
+    console.log(`timeoutTxCount: ${timeoutTxCount}, transactionList.length: ${transactionList.length}`);
     return transactionList;
   }
 
@@ -46,35 +67,11 @@ class Confirm extends Base {
     return finishTime - startTime; // ms
   }
 
-  async calculateLossRate() {
-    const ref = this.config.transactionOperationRef;
-    if (!ref) {
-      return null;
+  calculateLossRate(timeoutTxCount, totalTxCount) {
+    if (!totalTxCount) {
+      return '0%';
     }
-    const response = await request({
-      method: 'post',
-      baseURL: this.config.ainUrl,
-      url: '/json-rpc',
-      data: {
-        jsonrpc: '2.0',
-        id: 1,
-        method: 'ain_get',
-        params: {
-          type: 'GET_VALUE',
-          ref: ref,
-          is_global: true,
-          protoVer: '0.1.0'
-        },
-      }
-    });
-
-    const sendSuccess = this.config.sendSuccess;
-    const count = response.data.result.result;
-    if (!count) {
-      return null;
-    }
-
-    return (1 - (count / sendSuccess)).toFixed(5) * 100 + '%';
+    return (timeoutTxCount / totalTxCount * 100).toFixed(5) + '%';
   }
 
   async process() {
@@ -83,10 +80,8 @@ class Confirm extends Base {
     const transactionList = await this.requestTransactionList(startBlockNumber, finishBlockNumber);
     const blockDuration = await this.calculateDuration(startBlockNumber, finishBlockNumber);
     const tps = transactionList.length / (blockDuration / 1000);
-    const lossRate = await this.calculateLossRate();
 
     this.output.statistics.tps = tps;
-    this.output.statistics.lossRate = lossRate;
     this.output.statistics.blockDuration = blockDuration;
     this.output.statistics.startBlockNumber = startBlockNumber;
     this.output.statistics.finishBlockNumber = finishBlockNumber;
