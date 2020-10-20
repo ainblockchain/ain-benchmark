@@ -258,6 +258,7 @@ function printTestResult(testList) {
           `(${confirmJob.output.statistics.transactionCount} txs ` +
           `/ ${confirmJob.output.statistics.blockDuration / 1000} secs)`);
       console.log(`Loss Rate: ${confirmJob.output.statistics.lossRate}`);
+      console.log(`Confirmed time average: ${confirmJob.output.statistics.confirmedTimeAverage}`); // TODO(csh): Delete after test
       console.log(`Confirmed time table: ${JSON.stringify(confirmJob.output.statistics.confirmedTimeTable, null, 2)}`); // TODO(csh): Delete after test
     }
     console.log();
