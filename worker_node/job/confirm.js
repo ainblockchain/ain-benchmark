@@ -33,7 +33,7 @@ class Confirm extends Base {
       const block = await this.#ain.getBlock(number, true);
       transactionList.push(...block.transactions.reduce((acc, tx) => {
         const confirmedTime = block.timestamp - tx.timestamp;
-        const confirmedTimeSecs = Math.round(confirmedTime / 1000);
+        const confirmedTimeSecs = Math.floor(confirmedTime / 1000);
         if (!confirmedTimeTable[confirmedTimeSecs]) {
           confirmedTimeTable[confirmedTimeSecs] = 1;
         } else {
