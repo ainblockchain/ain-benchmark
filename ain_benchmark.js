@@ -256,7 +256,13 @@ function printTestResult(testList) {
       totalTps += tps;
       totalTxCount += confirmJob.output.statistics.transactionCount;
       totalTimeoutTxCount += confirmJob.output.statistics.timeoutTransactionCount;
-      confirmedTimeTable = { ...confirmedTimeTable, ...confirmJob.output.statistics.confirmedTimeTable };
+      for (const time in confirmJob.output.statistics.confirmedTimeTable) {
+        if (confirmedTimeTable[time] === undefined) {
+          confirmedTimeTable[time] = 0;
+        }
+        confirmedTimeTable[time] += confirmJob.output.statistics.confirmedTimeTable[time];
+      }
+
       console.log(`TPS: ${Number(tps).toFixed(5)} ` +
           `(${confirmJob.output.statistics.transactionCount} txs ` +
           `/ ${confirmJob.output.statistics.blockDuration / 1000} secs)`);
