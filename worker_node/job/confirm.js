@@ -57,7 +57,7 @@ class Confirm extends Base {
         totalConfirmedTime / transactionList.length : 0;
     this.output.statistics.lossRate = this.calculateLossRate(timeoutTxCount, transactionList.length);
     this.output.statistics.confirmedTimeTable = confirmedTimeTable;
-    console.log(`timeoutTxCount: ${timeoutTxCount}, transactionList.length: ${transactionList.length}`);
+    this.output.statistics.timeoutTransactionCount = timeoutTxCount;
     return transactionList;
   }
 

@@ -239,21 +239,24 @@ function printTestResult(testList) {
   console.log(`\n- Statistics`);
 
   let totalTps = 0;
+  let totalTxCount = 0;
+  let totalTimeoutTxCount = 0;
+  let confirmedTimeTable = {};
   const numberOfShards = getNumberOfShards(testList);
 
   for (const [i, test] of testList.entries()) {
     const confirmJob = test.jobList[1];
     const ainUrl = test.config.ainUrl;
-    let tps = null;
 
-    if (confirmJob.status === JobStatus.SUCCESS) {
-      tps = confirmJob.output.statistics.tps;
-      totalTps += tps;
-    }
     console.log(`[Shard ${i + 1}] endpoint: ${ainUrl}, path: ${test.config.transactionOperation.ref}`);
     if (confirmJob.status !== JobStatus.SUCCESS) {
       console.log(`Error: ${confirmJob.output.message} [${ainUrl}]`);
     } else {
+      const tps = confirmJob.output.statistics.tps;
+      totalTps += tps;
+      totalTxCount += confirmJob.output.statistics.transactionCount;
+      totalTimeoutTxCount += confirmJob.output.statistics.timeoutTransactionCount;
+      confirmedTimeTable = { ...confirmedTimeTable, ...confirmJob.output.statistics.confirmedTimeTable };
       console.log(`TPS: ${Number(tps).toFixed(5)} ` +
           `(${confirmJob.output.statistics.transactionCount} txs ` +
           `/ ${confirmJob.output.statistics.blockDuration / 1000} secs)`);
@@ -265,6 +268,8 @@ function printTestResult(testList) {
   }
   console.log(`Total TPS (X): ${totalTps.toFixed(5)}`);
   console.log(`Number of shards (sharding paths) (Y): ${numberOfShards}`);
+  console.log(`Total lose rate : ${(totalTimeoutTxCount / totalTxCount * 100).toFixed(5) + '%'}`);
+  console.log(`Confirmed time table : ${JSON.stringify(confirmedTimeTable, null, 2)}`);
 }
 
 function writeJsonlFile(filename, dataList) {
