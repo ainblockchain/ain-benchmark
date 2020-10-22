@@ -266,16 +266,18 @@ function printTestResult(testList) {
       console.log(`TPS: ${Number(tps).toFixed(5)} ` +
           `(${confirmJob.output.statistics.transactionCount} txs ` +
           `/ ${confirmJob.output.statistics.blockDuration / 1000} secs)`);
-      console.log(`Loss Rate: ${confirmJob.output.statistics.lossRate}`);
-      console.log(`Confirmed time average (ms) : ${confirmJob.output.statistics.confirmedTimeAverage}`); // TODO(csh): Delete after test
-      console.log(`Confirmed time table (sec) : ${JSON.stringify(confirmJob.output.statistics.confirmedTimeTable, null, 2)}`); // TODO(csh): Delete after test
+      // console.log(`Loss Rate: ${confirmJob.output.statistics.lossRate}`);
+      // console.log(`Confirmed time average (ms) : ${confirmJob.output.statistics.confirmedTimeAverage}`); // TODO(csh): Delete after test
+      // console.log(`Confirmed time table (sec) : ${JSON.stringify(confirmJob.output.statistics.confirmedTimeTable, null, 2)}`); // TODO(csh): Delete after test
     }
     console.log();
   }
-  console.log(`Total TPS (X): ${totalTps.toFixed(5)}`);
-  console.log(`Number of shards (sharding paths) (Y): ${numberOfShards}`);
-  console.log(`Total lose rate : ${(totalTimeoutTxCount / totalTxCount * 100).toFixed(5) + '%'}`);
-  console.log(`Confirmed time table : ${JSON.stringify(confirmedTimeTable, null, 2)}`);
+  console.log(`Total TPS : ${totalTps.toFixed(5)}`);
+  console.log(`Number of shards (sharding paths) : ${numberOfShards}`);
+  console.log(`Total timeout transaction count (A) : ${totalTimeoutTxCount}`);
+  console.log(`Total transaction count (B) : ${totalTxCount}`);
+  console.log(`Total lose rate (Y): ${(totalTimeoutTxCount / totalTxCount * 100).toFixed(5) + '%'}`);
+  // console.log(`Confirmed time table : ${JSON.stringify(confirmedTimeTable, null, 2)}`); // For debug
 }
 
 function writeJsonlFile(filename, dataList) {
