@@ -138,7 +138,6 @@ class Send extends Base {
         ...this.config.transactionOperation,
       },
       nonce: -1,
-      timestamp: this.config.timestamp,
     };
   }
 
@@ -150,13 +149,16 @@ class Send extends Base {
       this.config.timestamp = Date.now();
     }
 
-    const baseTimestamp = this.config.timestamp;
+    // const baseTimestamp = this.config.timestamp;
     const baseTx = this.makeBaseTransaction();
+    const timestampSet = new Set();
 
     for (let i = 0; i < this.config.numberOfTransactions; i++) {
       await delay(delayTime);
 
-      if (process._getActiveRequests().length >= REQUEST_THRESHOLD) {
+      const currTimestamp = Date.now();
+      if (timestampSet.has(currTimestamp) ||
+          process._getActiveRequests().length >= REQUEST_THRESHOLD) {
         this.output.statistics.pass++;
         continue;
       }
@@ -175,7 +177,7 @@ class Send extends Base {
               }).catch(err => {
                 resolve(err);
               });
-            }, 0, baseTimestamp + i);
+            }, 0, currTimestamp);
           }),
       );
     }
