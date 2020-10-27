@@ -145,11 +145,11 @@ function makeRoundList(testList) {
     // TODO: Fix matchedList === [] error
     console.log(`test.jobList[0].output: ${JSON.stringify(test.jobList[0].output, null, 2)}`);
     const startTime = test.jobList[0].output.matchedList[0].sentAt;
-    const zone = {
+    const round = {
       startTime: startTime,
       matchedList: [],
     };
-    roundList.push(zone);
+    roundList.push(round);
   }
 
   for (const [index, round] of roundList.entries()) {
