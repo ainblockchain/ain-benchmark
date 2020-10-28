@@ -4,6 +4,10 @@ const moment = require('moment-timezone');
 const { JobStatus, JobType } = require('../constants');
 const startTime = new Date().getTime();
 
+function timestampToString(timestamp) {
+  return moment(timestamp).format('mm:ss:S');
+}
+
 function getRunningTime() {
   return moment(new Date().getTime() - startTime).format('mm:ss');
 }
@@ -11,6 +15,7 @@ function getRunningTime() {
 function makeTestList(benchmarkConfig) {
   const testList = [];
   let index = 0;
+  const testStartTime = Date.now() + (20 * 1000);
 
   for (const target of benchmarkConfig.targetList) {
     // For incremental stress test
@@ -18,6 +23,7 @@ function makeTestList(benchmarkConfig) {
     const duration = Math.floor(benchmarkConfig.duration * rate);
     const numberOfTransactions = Math.floor(benchmarkConfig.numberOfTransactions * rate);
     const wait = benchmarkConfig.duration - duration;
+    const startTime = testStartTime + (wait * 1000);
 
     const test = {
       config: {
@@ -25,6 +31,7 @@ function makeTestList(benchmarkConfig) {
         numberOfTransactions: numberOfTransactions,
         wait: wait,
         startRound: index + 1,
+        startTime: startTime,
         ...target,
       },
       jobList: [],
@@ -74,8 +81,8 @@ async function requestJob(job) {
 async function processJob(testList, jobIndex) {
   console.log(`- Start to process '${testList[0].jobList[jobIndex].input.type}' job`);
   const requestList = [];
-  for (let i = testList.length - 1; i >= 0; i--) {
-    requestList.push(requestJob(testList[i].jobList[jobIndex]));
+  for (const test of testList) {
+    requestList.push(requestJob(test.jobList[jobIndex]));
   }
   await Promise.all(requestList);
 }
@@ -146,7 +153,7 @@ function makeRoundList(testList) {
   const roundList = [];
   for (const test of testList) {
     // TODO: Fix matchedList === [] error
-    console.log(`test.jobList[0].output: ${JSON.stringify(test.jobList[0].output, null, 2)}`);
+    // console.log(`test.jobList[0].output: ${JSON.stringify(test.jobList[0].output, null, 2)}`);
     const startTime = test.jobList[0].output.matchedList[0].sentAt;
     const round = {
       startTime: startTime,
@@ -216,7 +223,10 @@ function printResult(testList, roundList) {
   console.log(`- Finish all jobs [${getRunningTime()}]`);
   for (const [index, round] of roundList.entries()) {
     console.log(`[Round ${index + 1}] averageOfFinalizationTime (X): ${round.averageOfFinalizationTime}ms, ` +
-        `startTime: ${round.startTime}, finishTime: ${round.finishTime}, checkinTxCount: ${round.checkinTxCount}`);
+        `startTime: ${round.startTime}[${timestampToString(round.startTime)}], finishTime: ${round.finishTime}], checkinTxCount: ${round.checkinTxCount}`);
+    for (const matched of round.matchedList) {
+      console.log(`shard:${matched.shardNumber}, sentAt:${matched.sentAt}[${timestampToString(matched.sentAt)}]`);
+    }
   }
 }
 
