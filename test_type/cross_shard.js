@@ -14,7 +14,7 @@ function makeTestList(benchmarkConfig) {
 
   for (const target of benchmarkConfig.targetList) {
     // For incremental stress test
-    const rate = 1 - (index / benchmarkConfig.targetList.length);
+    const rate = Number((1 - (index / benchmarkConfig.targetList.length)).toFixed(1));
     const duration = Math.floor(benchmarkConfig.duration * rate);
     const numberOfTransactions = Math.floor(benchmarkConfig.numberOfTransactions * rate);
     const wait = benchmarkConfig.duration - duration;
@@ -73,9 +73,11 @@ async function requestJob(job) {
 
 async function processJob(testList, jobIndex) {
   console.log(`- Start to process '${testList[0].jobList[jobIndex].input.type}' job`);
-  for (const test of testList) {
-    await requestJob(test.jobList[jobIndex]);
+  const requestList = [];
+  for (let i = testList.length - 1; i >= 0; i--) {
+    requestList.push(requestJob(testList[i].jobList[jobIndex]));
   }
+  await Promise.all(requestList);
 }
 
 async function waitJob(testList, jobIndex) {
@@ -127,11 +129,12 @@ async function processCrossShardTestJob(testList) {
 function makeRoundList(testList) {
   // Make dataPool
   const dataPool = [];
-  for (const test of testList) {
+  for (const [index, test] of testList.entries()) {
     if (!test.jobList[0].output.matchedList) {
       continue;
     }
     for (const matchedData of test.jobList[0].output.matchedList) {
+      matchedData.shardNumber = index + 1;
       dataPool.push(matchedData);
     }
   }
