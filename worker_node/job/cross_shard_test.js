@@ -18,6 +18,7 @@ class CrossShardTest extends Base {
     'wait', // For incremental test
     'shardingPath',
     'startRound',
+    'startTime',
   ];
   #ain;
 
@@ -262,7 +263,7 @@ class CrossShardTest extends Base {
 
   async process() {
     console.log(`config: ${JSON.stringify(this.config, null, 2)}`);
-    await delay(this.config.wait * 1000);
+    await delay(this.config.startTime - Date.now());
     const startBlock = await this.getRecentBlockInformation(['number']);
     const checkinTxList = await this.sendTxs();
     await delay(30 * 1000);
