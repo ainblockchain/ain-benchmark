@@ -153,10 +153,9 @@ function makeRoundList(testList) {
   const roundList = [];
   for (const test of testList) {
     // TODO: Fix matchedList === [] error
-    // console.log(`test.jobList[0].output: ${JSON.stringify(test.jobList[0].output, null, 2)}`);
     const startTime = test.jobList[0].output.matchedList[0].sentAt;
     const round = {
-      startTime: startTime,
+      startTime: startTime - 1000,
       matchedList: [],
     };
     roundList.push(round);
@@ -223,10 +222,7 @@ function printResult(testList, roundList) {
   console.log(`- Finish all jobs [${getRunningTime()}]`);
   for (const [index, round] of roundList.entries()) {
     console.log(`[Round ${index + 1}] averageOfFinalizationTime (X): ${round.averageOfFinalizationTime}ms, ` +
-        `startTime: ${round.startTime}[${timestampToString(round.startTime)}], finishTime: ${round.finishTime}], checkinTxCount: ${round.checkinTxCount}`);
-    for (const matched of round.matchedList) {
-      console.log(`shard:${matched.shardNumber}, sentAt:${matched.sentAt}[${timestampToString(matched.sentAt)}]`);
-    }
+        `startTime: ${timestampToString(round.startTime)} [${round.startTime}], checkinTxCount: ${round.checkinTxCount}`);
   }
 }
 
