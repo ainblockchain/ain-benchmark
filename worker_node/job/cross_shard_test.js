@@ -262,17 +262,12 @@ class CrossShardTest extends Base {
 
   async process() {
     console.log(`config: ${JSON.stringify(this.config, null, 2)}`);
-    // await delay(1000 - (this.))
-    const roundWaitTime = (this.config.duration / this.config.numberOfTransactions * 1000) /
-        (21 - this.config.startRound);
-    await delay(roundWaitTime);
     await delay(this.config.wait * 1000);
     const startBlock = await this.getRecentBlockInformation(['number']);
     const checkinTxList = await this.sendTxs();
     await delay(30 * 1000);
     const finishBlock = await this.getRecentBlockInformation(['number']);
     const txList = await this.requestTxList(startBlock.number, finishBlock.number);
-    console.log(JSON.stringify(txList, null, 2));
 
     const transferWithCheckinTxList = txList.filter(tx => {
       const ref = _.get(tx, 'operation.ref', ' ');
