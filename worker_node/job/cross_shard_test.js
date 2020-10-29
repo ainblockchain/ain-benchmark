@@ -71,8 +71,8 @@ class CrossShardTest extends Base {
         id: 0,
       },
     }).then(resp => {
-      const success = !this.checkForTransactionErrorCode(_.get(resp, 'data.result', false));
-      if (!success) {
+      const success = !this.checkForTransactionErrorCode(_.get(resp, 'data.result.result', false));
+      if (success !== true) {
         throw Error(`Send transaction error ${JSON.stringify(resp, null, 2)}`);
       }
       return signedTx.transaction;
@@ -180,7 +180,10 @@ class CrossShardTest extends Base {
             }, 0);
           }));
     }
-    const checkinTxList = await Promise.all(sendTxPromiseList).then(this.checkResultList);
+    const checkinTxList = await Promise.all(sendTxPromiseList)
+    .then(result => {
+      return this.checkResultList(result);
+    });
     return checkinTxList;
   }
 
@@ -188,6 +191,7 @@ class CrossShardTest extends Base {
     const successResultList = resultList.filter(result => {
       const isError = result instanceof Error;
       if (isError) {
+        console.log(`Send Error: ${result.message}`);
         this.output.statistics.sendError++;
       }
       return !isError;
