@@ -164,6 +164,9 @@ function makeRoundList(testList) {
     const startTime = _.get(test, 'jobList[0].output.matchedList[0].sentAt', 0);
     const round = {
       startTime: startTime ? startTime - 1000 : 0,
+      finishTime: 0,
+      averageOfFinalizationTime: 0,
+      checkinTxCount: 0,
       matchedList: [],
     };
     roundList.push(round);
@@ -193,15 +196,12 @@ function makeRoundList(testList) {
     round.checkinTxCount = round.matchedList.length;
 
     if (round.matchedList.length === 0) {
-      round.startTime = 0;
-      round.finishTime = 0;
-      round.averageOfFinalizationTime = 0;
       continue;
     }
 
     round.startTime = round.matchedList[0].sentAt;
     round.finishTime = round.matchedList[round.matchedList.length - 1].sentAt;
-    round.averageOfFinalizationTime = (totalOfFinalizationTime / round.matchedList.length).toFixed(2);
+    round.averageOfFinalizationTime = Number((totalOfFinalizationTime / round.matchedList.length).toFixed(2));
   }
 
   return roundList;
@@ -230,7 +230,7 @@ function printResult(testList, roundList) {
   console.log(`- Finish all jobs [${getRunningTime()}]`);
   for (const [index, round] of roundList.entries()) {
     console.log(`[Round ${index + 1}] averageOfFinalizationTime (X): ${round.averageOfFinalizationTime}ms, ` +
-        `startTime: ${timestampToString(round.startTime)} [${round.startTime}], checkinTxCount: ${round.checkinTxCount}`);
+        `startTime: ${timestampToString(round.startTime)}[${round.startTime}], checkinTxCount: ${round.checkinTxCount}`);
   }
 }
 
@@ -268,9 +268,19 @@ async function writeTestResult(testList) {
   }
 }
 
+function writeRoundResult(roundList) {
+  for (const [i, round] of roundList.entries()) {
+    const roundDir = resultDir + `/r${(i + 1).toString().padStart(2, '0')}`; // r01, r02 ...
+    const roundResultFile = roundDir + `/result.json`;
+    fs.mkdirSync(roundDir);
+    fs.writeFileSync(roundResultFile, JSON.stringify(round, null, 2));
+  }
+}
+
 async function writeResult(testList, roundList) {
   initResultDirectory();
   await writeTestResult(testList);
+  writeRoundResult(roundList);
 
   console.log(`- Save result in '${resultDir}'`);
 }
