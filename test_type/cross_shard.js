@@ -2,8 +2,16 @@ const request = require('../util/request');
 const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 const _ = require('lodash');
 const moment = require('moment-timezone');
+const fs = require('fs');
 const { JobStatus, JobType } = require('../constants');
 const startTime = new Date().getTime();
+const resultDir = `result_${moment().tz('Asia/Seoul').format('MM-DD_HH:mm:SS')}`;
+
+function initResultDirectory() {
+  if (!fs.existsSync(resultDir)) {
+    fs.mkdirSync(resultDir);
+  }
+}
 
 function timestampToString(timestamp) {
   return moment(timestamp).format('mm:ss:S');
@@ -226,6 +234,10 @@ function printResult(testList, roundList) {
   }
 }
 
+async function writeResult(testList, roundList) {
+  initResultDirectory();
+}
+
 async function start(benchmarkConfig) {
   const testList = makeTestList(benchmarkConfig);
 
@@ -235,7 +247,7 @@ async function start(benchmarkConfig) {
   const roundList = makeRoundList(testList);
   printResult(testList, roundList);
 
-  // TODO: Write result
+  await writeResult(testList, roundList);
 }
 
 module.exports = {
