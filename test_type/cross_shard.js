@@ -152,10 +152,9 @@ function makeRoundList(testList) {
   // Slice by time zone
   const roundList = [];
   for (const test of testList) {
-    // TODO: Fix matchedList === [] error
-    const startTime = test.jobList[0].output.matchedList[0].sentAt;
+    const startTime = _.get('test.jobList[0].output.matchedList[0].sentAt', 0);
     const round = {
-      startTime: startTime - 1000,
+      startTime: startTime ? startTime - 1000 : 0,
       matchedList: [],
     };
     roundList.push(round);
