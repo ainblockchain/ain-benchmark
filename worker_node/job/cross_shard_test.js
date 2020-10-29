@@ -287,6 +287,7 @@ class CrossShardTest extends Base {
 
     const matchedList = await this.matchCheckinAndTransfer(checkinTxList, transferWithCheckinTxList);
 
+    this.output.transactionList = txList;
     this.output.matchedList = matchedList;
     this.output.statistics.checkinSuccess = matchedList.length;
     console.log(this.output.statistics);
