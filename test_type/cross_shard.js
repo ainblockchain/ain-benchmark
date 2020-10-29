@@ -234,8 +234,45 @@ function printResult(testList, roundList) {
   }
 }
 
+function writeJsonlFile(filename, dataList) {
+  return new Promise((resolve, reject) => {
+    const writeStream = fs.createWriteStream(filename);
+
+    writeStream.on('finish', _ => {
+      resolve(dataList.length);
+    });
+
+    writeStream.on('error', err => {
+      reject(err);
+    });
+
+    for (const data of dataList) {
+      writeStream.write(`${JSON.stringify(data)}\n`);
+    }
+
+    writeStream.end();
+  });
+}
+
+async function writeTestResult(testList) {
+  for (const [i, test] of testList.entries()) {
+    const crossShardTestJob = test.jobList[0];
+    if (crossShardTestJob.status !== JobStatus.SUCCESS) {
+      continue;
+    }
+
+    const testDir = resultDir + `/s${(i + 1).toString().padStart(2, '0')}`; // s01, s02 ...
+    const transactionsFile = testDir + `/transactions.jsonl`;
+    fs.mkdirSync(testDir);
+    await writeJsonlFile(transactionsFile, crossShardTestJob.output.transactionList);
+  }
+}
+
 async function writeResult(testList, roundList) {
   initResultDirectory();
+  await writeTestResult(testList);
+
+  console.log(`- Save result in '${resultDir}'`);
 }
 
 async function start(benchmarkConfig) {
