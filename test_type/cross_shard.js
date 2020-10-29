@@ -19,7 +19,7 @@ function makeTestList(benchmarkConfig) {
 
   for (const target of benchmarkConfig.targetList) {
     // For incremental stress test
-    const rate = Number((1 - (index / benchmarkConfig.targetList.length)).toFixed(1));
+    const rate = Number((1 - (index / benchmarkConfig.targetList.length)).toFixed(2));
     const duration = Math.floor(benchmarkConfig.duration * rate);
     const numberOfTransactions = Math.floor(benchmarkConfig.numberOfTransactions * rate);
     const wait = benchmarkConfig.duration - duration;
