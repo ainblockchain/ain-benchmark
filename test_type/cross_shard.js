@@ -1,5 +1,6 @@
 const request = require('../util/request');
 const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
+const _ = require('lodash');
 const moment = require('moment-timezone');
 const { JobStatus, JobType } = require('../constants');
 const startTime = new Date().getTime();
