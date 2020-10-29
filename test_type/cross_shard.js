@@ -153,7 +153,7 @@ function makeRoundList(testList) {
   // Slice by time zone
   const roundList = [];
   for (const test of testList) {
-    const startTime = _.get('test.jobList[0].output.matchedList[0].sentAt', 0);
+    const startTime = _.get(test, 'jobList[0].output.matchedList[0].sentAt', 0);
     const round = {
       startTime: startTime ? startTime - 1000 : 0,
       matchedList: [],
