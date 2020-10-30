@@ -244,7 +244,8 @@ function printResult(testList, roundList) {
   console.log(`- Finish all jobs [${getRunningTime()}]`);
   for (const [index, round] of roundList.entries()) {
     console.log(`[Round ${index + 1}] averageOfFinalizationTime: ${round.averageOfFinalizationTime}ms, ` +
-        `startTime: ${timestampToString(round.startTime)}[${round.startTime}], checkinTxCount: ${round.checkinTxCount}`);
+        `startTime: ${moment(round.startTime).tz('Asia/Seoul').format('HH:mm:SS')}, ` +
+        `checkinTxCount: ${round.checkinTxCount}`);
   }
   console.log(`* Total average of finalization time (X): ${getTotalAverageOfFinalizationTime(roundList)}ms`);
 }
