@@ -202,9 +202,23 @@ function makeRoundList(testList) {
     round.startTime = round.matchedList[0].sentAt;
     round.finishTime = round.matchedList[round.matchedList.length - 1].sentAt;
     round.averageOfFinalizationTime = Number((totalOfFinalizationTime / round.matchedList.length).toFixed(2));
+    round.totalOfFinalizationTime = totalOfFinalizationTime;
   }
 
   return roundList;
+}
+
+function getTotalAverageOfFinalizationTime(roundList) {
+  let totalTime = 0;
+  let totalCount = 0;
+  for (const round of roundList) {
+    totalTime += round.totalOfFinalizationTime;
+    totalCount += round.checkinTxCount;
+  }
+  if (totalCount === 0) {
+    return 0;
+  }
+  return Number((totalTime / totalCount).toFixed(2));
 }
 
 function printJobResult(testList, jobIndex) {
@@ -229,9 +243,10 @@ function printJobResult(testList, jobIndex) {
 function printResult(testList, roundList) {
   console.log(`- Finish all jobs [${getRunningTime()}]`);
   for (const [index, round] of roundList.entries()) {
-    console.log(`[Round ${index + 1}] averageOfFinalizationTime (X): ${round.averageOfFinalizationTime}ms, ` +
+    console.log(`[Round ${index + 1}] averageOfFinalizationTime: ${round.averageOfFinalizationTime}ms, ` +
         `startTime: ${timestampToString(round.startTime)}[${round.startTime}], checkinTxCount: ${round.checkinTxCount}`);
   }
+  console.log(`* Total average of finalization time (X): ${getTotalAverageOfFinalizationTime(roundList)}ms`);
 }
 
 function writeJsonlFile(filename, dataList) {
