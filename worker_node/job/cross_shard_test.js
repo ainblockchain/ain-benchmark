@@ -233,6 +233,7 @@ class CrossShardTest extends Base {
       const block = await this.#ain.getBlock(number, true);
       txList.push(...block.transactions.reduce((acc, tx) => {
         acc.push({
+          blockNumber: number,
           hash: tx.hash,
           nonce: tx.nonce,
           timestamp: tx.timestamp,
@@ -286,6 +287,7 @@ class CrossShardTest extends Base {
 
     const matchedList = await this.matchCheckinAndTransfer(checkinTxList, transferWithCheckinTxList);
 
+    this.output.transactionList = txList;
     this.output.matchedList = matchedList;
     this.output.statistics.checkinSuccess = matchedList.length;
     console.log(this.output.statistics);

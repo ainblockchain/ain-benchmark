@@ -2,8 +2,16 @@ const request = require('../util/request');
 const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 const _ = require('lodash');
 const moment = require('moment-timezone');
+const fs = require('fs');
 const { JobStatus, JobType } = require('../constants');
 const startTime = new Date().getTime();
+const resultDir = `result_${moment().tz('Asia/Seoul').format('MM-DD_HH:mm:SS')}`;
+
+function initResultDirectory() {
+  if (!fs.existsSync(resultDir)) {
+    fs.mkdirSync(resultDir);
+  }
+}
 
 function timestampToString(timestamp) {
   return moment(timestamp).format('mm:ss:S');
@@ -156,6 +164,9 @@ function makeRoundList(testList) {
     const startTime = _.get(test, 'jobList[0].output.matchedList[0].sentAt', 0);
     const round = {
       startTime: startTime ? startTime - 1000 : 0,
+      finishTime: 0,
+      averageOfFinalizationTime: 0,
+      checkinTxCount: 0,
       matchedList: [],
     };
     roundList.push(round);
@@ -185,18 +196,29 @@ function makeRoundList(testList) {
     round.checkinTxCount = round.matchedList.length;
 
     if (round.matchedList.length === 0) {
-      round.startTime = 0;
-      round.finishTime = 0;
-      round.averageOfFinalizationTime = 0;
       continue;
     }
 
     round.startTime = round.matchedList[0].sentAt;
     round.finishTime = round.matchedList[round.matchedList.length - 1].sentAt;
-    round.averageOfFinalizationTime = (totalOfFinalizationTime / round.matchedList.length).toFixed(2);
+    round.averageOfFinalizationTime = Number((totalOfFinalizationTime / round.matchedList.length).toFixed(2));
+    round.totalOfFinalizationTime = totalOfFinalizationTime;
   }
 
   return roundList;
+}
+
+function getTotalAverageOfFinalizationTime(roundList) {
+  let totalTime = 0;
+  let totalCount = 0;
+  for (const round of roundList) {
+    totalTime += round.totalOfFinalizationTime;
+    totalCount += round.checkinTxCount;
+  }
+  if (totalCount === 0) {
+    return 0;
+  }
+  return Number((totalTime / totalCount).toFixed(2));
 }
 
 function printJobResult(testList, jobIndex) {
@@ -221,9 +243,62 @@ function printJobResult(testList, jobIndex) {
 function printResult(testList, roundList) {
   console.log(`- Finish all jobs [${getRunningTime()}]`);
   for (const [index, round] of roundList.entries()) {
-    console.log(`[Round ${index + 1}] averageOfFinalizationTime (X): ${round.averageOfFinalizationTime}ms, ` +
-        `startTime: ${timestampToString(round.startTime)} [${round.startTime}], checkinTxCount: ${round.checkinTxCount}`);
+    console.log(`[Round ${index + 1}] averageOfFinalizationTime: ${round.averageOfFinalizationTime}ms, ` +
+        `startTime: ${moment(round.startTime).tz('Asia/Seoul').format('HH:mm:SS')}, ` +
+        `checkinTxCount: ${round.checkinTxCount}`);
   }
+  console.log(`* Total average of finalization time (X): ${getTotalAverageOfFinalizationTime(roundList)}ms`);
+}
+
+function writeJsonlFile(filename, dataList) {
+  return new Promise((resolve, reject) => {
+    const writeStream = fs.createWriteStream(filename);
+
+    writeStream.on('finish', _ => {
+      resolve(dataList.length);
+    });
+
+    writeStream.on('error', err => {
+      reject(err);
+    });
+
+    for (const data of dataList) {
+      writeStream.write(`${JSON.stringify(data)}\n`);
+    }
+
+    writeStream.end();
+  });
+}
+
+async function writeTestResult(testList) {
+  for (const [i, test] of testList.entries()) {
+    const crossShardTestJob = test.jobList[0];
+    if (crossShardTestJob.status !== JobStatus.SUCCESS) {
+      continue;
+    }
+
+    const testDir = resultDir + `/s${(i + 1).toString().padStart(2, '0')}`; // s01, s02 ...
+    const transactionsFile = testDir + `/transactions.jsonl`;
+    fs.mkdirSync(testDir);
+    await writeJsonlFile(transactionsFile, crossShardTestJob.output.transactionList);
+  }
+}
+
+function writeRoundResult(roundList) {
+  for (const [i, round] of roundList.entries()) {
+    const roundDir = resultDir + `/r${(i + 1).toString().padStart(2, '0')}`; // r01, r02 ...
+    const roundResultFile = roundDir + `/result.json`;
+    fs.mkdirSync(roundDir);
+    fs.writeFileSync(roundResultFile, JSON.stringify(round, null, 2));
+  }
+}
+
+async function writeResult(testList, roundList) {
+  initResultDirectory();
+  await writeTestResult(testList);
+  writeRoundResult(roundList);
+
+  console.log(`- Save result in '${resultDir}'`);
 }
 
 async function start(benchmarkConfig) {
@@ -235,7 +310,7 @@ async function start(benchmarkConfig) {
   const roundList = makeRoundList(testList);
   printResult(testList, roundList);
 
-  // TODO: Write result
+  await writeResult(testList, roundList);
 }
 
 module.exports = {
