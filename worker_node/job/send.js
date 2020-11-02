@@ -1,5 +1,6 @@
 const Base = require('./base');
 const Ain = require('@ainblockchain/ain-js').default;
+const { BLOCKCHAIN_PROTOCOL_VERSION } = require('@ainblockchain/ain-js/lib/constants');
 const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 const request = require('../../util/request');
 const BLOCK_TIME = process.env.BLOCK_TIME || 8000;
@@ -121,7 +122,7 @@ class Send extends Base {
           value: null,
           address: this.config.ainAddress,
           is_global: true,
-          protoVer: '0.1.0'
+          protoVer: BLOCKCHAIN_PROTOCOL_VERSION,
         },
         jsonrpc: '2.0',
         id: 0

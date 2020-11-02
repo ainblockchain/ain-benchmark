@@ -4,7 +4,7 @@ const request = require('../../util/request');
 const ainUtil = require('@ainblockchain/ain-util');
 const _ = require('lodash');
 const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
-const CURRENT_PROTOCOL_VERSION = '0.1.0';
+const { BLOCKCHAIN_PROTOCOL_VERSION } = require('@ainblockchain/ain-js/lib/constants');
 const RETRY_THRESHOLD = 3;
 
 class CrossShardTest extends Base {
@@ -48,7 +48,7 @@ class CrossShardTest extends Base {
     return {
       txHash,
       signedTx: {
-        protoVer: CURRENT_PROTOCOL_VERSION,
+        protoVer: BLOCKCHAIN_PROTOCOL_VERSION,
         transaction: tx,
         signature: sig,
       },
@@ -87,7 +87,7 @@ class CrossShardTest extends Base {
       data: {
         method: 'ain_getTransactionByHash',
         params: {
-          protoVer: CURRENT_PROTOCOL_VERSION,
+          protoVer: BLOCKCHAIN_PROTOCOL_VERSION,
           hash: txHash,
         },
         jsonrpc: '2.0',
