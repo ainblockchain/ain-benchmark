@@ -21,7 +21,7 @@ GCP_USER="$2"
 FILES_FOR_WORKER_INSTANCE="worker_node/ util/ ain_benchmark.js constants.js package.json start_workers.sh"
 AIN_BENCHMARK_DIR="/home/ain-benchmark"
 
-# Worker instance 0 (4 workers)
+# Kill process & move files & download modules & start workers
 INSTANCE_0_TARGET_ADDR="${GCP_USER}@dev-worker-node-0-taiwan"
 printf "\nDeploying files to ${INSTANCE_0_TARGET_ADDR}..."
 gcloud compute ssh ${INSTANCE_0_TARGET_ADDR} --command "sudo killall node; sudo rm -rf ${AIN_BENCHMARK_DIR};" --project ${PROJECT_ID}
