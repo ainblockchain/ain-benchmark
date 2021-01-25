@@ -169,7 +169,7 @@ class Send extends Base {
             setTimeout((timestamp) => {
               baseTx.timestamp = timestamp;
               this.#ain.sendTransaction(baseTx).then(result => {
-                if (!result || !result.hasOwnProperty('txHash')) {
+                if (!result || !result.hasOwnProperty('tx_hash')) {
                   throw Error(`Wrong format`);
                 } else if (!result.result) {
                   throw Error('result !== true');
