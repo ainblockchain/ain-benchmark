@@ -145,6 +145,8 @@ class Send extends Base {
   async sendTxs() {
     const delayTime = this.config.duration / this.config.numberOfTransactions * 1000;
     const sendTxPromiseList = [];
+    const randomPath = this.config.randomPath === true;
+    const randomValue = this.config.randomValue === true;
 
     if (!this.config.timestamp) {
       this.config.timestamp = Date.now();
@@ -164,11 +166,18 @@ class Send extends Base {
         continue;
       }
 
+      const tx = JSON.parse(JSON.stringify(baseTx));
       sendTxPromiseList.push(
           new Promise((resolve, reject) => {
             setTimeout((timestamp) => {
-              baseTx.timestamp = timestamp;
-              this.#ain.sendTransaction(baseTx).then(result => {
+              tx.timestamp = timestamp;
+              if (randomPath) {
+                tx.operation.ref = `${tx.operation.ref}/${i}`;
+              }
+              if (randomValue) {
+                tx.operation.value = i;
+              }
+              this.#ain.sendTransaction(tx).then(result => {
                 if (!result || !result.hasOwnProperty('tx_hash')) {
                   throw Error(`Wrong format`);
                 } else if (!result.result) {
@@ -178,7 +187,7 @@ class Send extends Base {
               }).catch(err => {
                 resolve(err);
               });
-            }, 0, currTimestamp);
+            }, 0, currTimestamp + i);
           }),
       );
     }
