@@ -12,7 +12,9 @@
         "ref": "/apps/shard_1/app_visit/visit_count",
         "value": 1,
         "is_global": true
-      }
+      },
+      "consecutivePath": true,
+      "consecutiveValue": true
     }
   ]
 }
