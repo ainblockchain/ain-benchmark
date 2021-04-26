@@ -20,7 +20,7 @@ fi
 
 GCP_USER="$2"
 AIN_PATH="/home/ain-blockchain"
-NODE_LOG_PATH="/logger/logs/8080"
+NODE_LOG_PATH="/logs/8080"
 NODE_ERROR_LOG_FILE="error_logs.txt"
 tracker_instance="${SEASON}-tracker-taiwan"
 node_instance_list=(
