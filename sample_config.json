@@ -13,8 +13,8 @@
         "value": 1,
         "is_global": true
       },
-      "randomPath": true,
-      "randomValue": true
+      "consecutivePath": true,
+      "consecutiveValue": true
     }
   ]
 }

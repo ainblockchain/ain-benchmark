@@ -145,8 +145,8 @@ class Send extends Base {
   async sendTxs() {
     const delayTime = this.config.duration / this.config.numberOfTransactions * 1000;
     const sendTxPromiseList = [];
-    const randomPath = this.config.randomPath === true;
-    const randomValue = this.config.randomValue === true;
+    const consecutivePath = this.config.consecutivePath === true;
+    const consecutiveValue = this.config.consecutiveValue === true;
 
     if (!this.config.timestamp) {
       this.config.timestamp = Date.now();
@@ -171,10 +171,10 @@ class Send extends Base {
           new Promise((resolve, reject) => {
             setTimeout((timestamp) => {
               tx.timestamp = timestamp;
-              if (randomPath) {
+              if (consecutivePath) {
                 tx.operation.ref = `${tx.operation.ref}/${i}`;
               }
-              if (randomValue) {
+              if (consecutiveValue) {
                 tx.operation.value = i;
               }
               this.#ain.sendTransaction(tx).then(result => {
