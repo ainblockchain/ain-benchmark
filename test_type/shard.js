@@ -22,6 +22,7 @@ function makeTestList(benchmarkConfig) {
       config: {
         duration: benchmarkConfig.duration,
         numberOfTransactions: benchmarkConfig.numberOfTransactions,
+        saveTxs: benchmarkConfig.saveTxs || false,
         ...target,
       },
       jobList: [],
@@ -163,6 +164,7 @@ function addConfirmJob(testList) {
         finishBlockNumber: test.jobList[prevJobIndex].output.finishBlockNumber,
         transactionOperationRef: test.jobList[prevJobIndex].input.config.transactionOperation.ref,
         sendSuccess: test.jobList[prevJobIndex].output.statistics.success,
+        saveTxs: test.config.saveTxs,
       };
     } catch (err) {
       job.status = JobStatus.PASS;
@@ -291,7 +293,9 @@ async function writeTestResult(testList) {
     if (confirmJob.status !== JobStatus.SUCCESS) {
       continue;
     }
-
+    if (!test.config.saveTxs) {
+      continue;
+    }
     const testDir = resultDir + `/s${(i + 1).toString().padStart(2, '0')}`; // s01, s02 ...
     const transactionsFile = testDir + `/transactions.jsonl`;
     fs.mkdirSync(testDir);
