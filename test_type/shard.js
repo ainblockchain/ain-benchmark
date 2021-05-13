@@ -220,7 +220,7 @@ function printJobResult(testList, jobIndex) {
   console.log('');
 }
 
-function printTestResult(testList) {
+function assembleTestResult(testList) {
   console.log(`- Finish all jobs [${getRunningTime()}]`);
   console.log(`\n- Statistics`);
 
@@ -247,12 +247,20 @@ function printTestResult(testList) {
     }
     console.log();
   }
-  console.log(`Total TPS : ${totalTps.toFixed(5)}`);
+  totalTps = Number(totalTps.toFixed(5));
+  const lossRate = (totalTimeoutTxCount / totalTxCount * 100).toFixed(5) + '%';
+  console.log(`Total TPS : ${totalTps}`);
   console.log(`Number of shards (sharding paths) : ${numberOfShards}`);
   console.log(`Total timeout transaction count (A) : ${totalTimeoutTxCount}`);
   console.log(`Total transaction count (B) : ${totalTxCount}`);
-  console.log(`Total lose rate (Y): ${(totalTimeoutTxCount / totalTxCount * 100).toFixed(5) + '%'}`);
-  // console.log(`Confirmed time table : ${JSON.stringify(confirmedTimeTable, null, 2)}`); // For debug
+  console.log(`Total lose rate (Y): ${lossRate}`);
+  // TODO: More information (e.g: CPU, Memory, Network traffic)
+  return {
+    totalTps,
+    totalTimeoutTxCount,
+    totalTxCount,
+    lossRate,
+  }
 }
 
 function writeJsonlFile(filename, dataList) {
@@ -275,7 +283,9 @@ function writeJsonlFile(filename, dataList) {
   });
 }
 
-async function writeTestResult(testList, outputDirName) {
+async function writeTestResult(testResult, testList, outputDirName) {
+  const outputFilePath = `${outputDirName}/result.json`;
+  await fs.writeFileSync(outputFilePath, JSON.stringify(testResult, null, 2));
   for (const [i, test] of testList.entries()) {
     const confirmJob = test.jobList[1];
     if (confirmJob.status !== JobStatus.SUCCESS) {
@@ -327,8 +337,8 @@ async function start(benchmarkConfig, outputDirName) {
   printJobResult(testList, 1);
 
   // Output
-  printTestResult(testList);
-  await writeTestResult(testList, outputDirName);
+  const testResult = assembleTestResult(testList);
+  await writeTestResult(testResult, testList, outputDirName);
 
   if (!debugMode) {
     await clear(testList);
