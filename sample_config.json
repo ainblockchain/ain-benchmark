@@ -1,6 +1,7 @@
 {
   "duration": 600,
   "numberOfTransactions": 60000,
+  "saveTxs": false,
   "targetList": [
     {
       "workerUrl": "http://localhost:3001/",
