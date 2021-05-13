@@ -227,7 +227,6 @@ function printTestResult(testList) {
   let totalTps = 0;
   let totalTxCount = 0;
   let totalTimeoutTxCount = 0;
-  let confirmedTimeTable = {};
   const numberOfShards = getNumberOfShards(testList);
 
   for (const [i, test] of testList.entries()) {
@@ -242,19 +241,9 @@ function printTestResult(testList) {
       totalTps += tps;
       totalTxCount += confirmJob.output.statistics.transactionCount;
       totalTimeoutTxCount += confirmJob.output.statistics.timeoutTransactionCount;
-      for (const time in confirmJob.output.statistics.confirmedTimeTable) {
-        if (confirmedTimeTable[time] === undefined) {
-          confirmedTimeTable[time] = 0;
-        }
-        confirmedTimeTable[time] += confirmJob.output.statistics.confirmedTimeTable[time];
-      }
-
       console.log(`TPS: ${Number(tps).toFixed(5)} ` +
           `(${confirmJob.output.statistics.transactionCount} txs ` +
           `/ ${confirmJob.output.statistics.blockDuration / 1000} secs)`);
-      // console.log(`Loss Rate: ${confirmJob.output.statistics.lossRate}`);
-      // console.log(`Confirmed time average (ms) : ${confirmJob.output.statistics.confirmedTimeAverage}`); // TODO(csh): Delete after test
-      // console.log(`Confirmed time table (sec) : ${JSON.stringify(confirmJob.output.statistics.confirmedTimeTable, null, 2)}`); // TODO(csh): Delete after test
     }
     console.log();
   }
