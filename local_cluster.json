@@ -1,11 +1,11 @@
 {
-  "duration": 600,
-  "numberOfTransactions": 60000,
-  "saveTxs": false,
+  "testType": "SHARD",
+  "duration": 10,
+  "numberOfTransactions": 100,
   "targetList": [
     {
-      "workerUrl": "http://localhost:3001/",
-      "ainUrl": "http://localhost:8081/",
+      "workerUrl": "http://localhost:4001/",
+      "ainUrl": "http://localhost:9012/",
       "ainAddress": "0x9d973ED46714511E371dd5Bb3baa6b67aEbb7a19",
       "ainPrivateKey": "a1b18fba7f40cb6ba0bd00c47b962f2aaa338f525e15d52e26123618dc726cd2",
       "transactionOperation": {
@@ -13,9 +13,7 @@
         "ref": "/apps/shard_1/app_visit/visit_count",
         "value": 1,
         "is_global": true
-      },
-      "consecutivePath": true,
-      "consecutiveValue": true
+      }
     }
   ]
 }

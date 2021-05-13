@@ -17,6 +17,7 @@ class Confirm extends Base {
       statistics: {
         tps: null,
         lossRate: null,
+        transactionCount: 0,
       },
     };
     this.#ain = new Ain(this.config.ainUrl);
@@ -27,18 +28,15 @@ class Confirm extends Base {
     const transactionList = [];
     let timeoutTxCount = 0;
     let totalConfirmedTime = 0;
-    const confirmedTimeTable = {}; // TODO(csh): Delete after test
 
     for (let number = from; number <= to; number++) {
       const block = await this.#ain.getBlock(number, true);
+      this.output.statistics.transactionCount += block.transactions.length;
+      if (!this.config.saveTxs) {
+        continue;
+      }
       transactionList.push(...block.transactions.reduce((acc, tx) => {
         const confirmedTime = block.timestamp - tx.timestamp;
-        const confirmedTimeSecs = Math.floor(confirmedTime / 1000);
-        if (!confirmedTimeTable[confirmedTimeSecs]) {
-          confirmedTimeTable[confirmedTimeSecs] = 1;
-        } else {
-          confirmedTimeTable[confirmedTimeSecs]++;
-        }
         if (confirmedTime > TX_TIMEOUT_MS) {
           timeoutTxCount++;
         }
@@ -55,8 +53,7 @@ class Confirm extends Base {
     }
     this.output.statistics.confirmedTimeAverage = transactionList.length ?
         totalConfirmedTime / transactionList.length : 0;
-    this.output.statistics.lossRate = this.calculateLossRate(timeoutTxCount, transactionList.length);
-    this.output.statistics.confirmedTimeTable = confirmedTimeTable;
+    this.output.statistics.lossRate = this.calculateLossRate(timeoutTxCount, this.output.statistics.transactionCount);
     this.output.statistics.timeoutTransactionCount = timeoutTxCount;
     return transactionList;
   }
@@ -79,13 +76,12 @@ class Confirm extends Base {
     const finishBlockNumber = this.config.finishBlockNumber;
     const transactionList = await this.requestTransactionList(startBlockNumber, finishBlockNumber);
     const blockDuration = await this.calculateDuration(startBlockNumber, finishBlockNumber);
-    const tps = transactionList.length / (blockDuration / 1000);
+    const tps = this.output.statistics.transactionCount / (blockDuration / 1000);
 
     this.output.statistics.tps = tps;
     this.output.statistics.blockDuration = blockDuration;
     this.output.statistics.startBlockNumber = startBlockNumber;
     this.output.statistics.finishBlockNumber = finishBlockNumber;
-    this.output.statistics.transactionCount = transactionList.length;
     this.output.transactionList = transactionList;
 
     return this.output;

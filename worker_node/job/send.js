@@ -183,8 +183,10 @@ class Send extends Base {
                 } else if (!result.result) {
                   throw Error('result !== true');
                 }
+                this.output.statistics.success++;
                 resolve(result.txHash);
               }).catch(err => {
+                this.output.statistics.error++;
                 resolve(err);
               });
             }, 0, currTimestamp + i);
@@ -196,16 +198,6 @@ class Send extends Base {
     return sendTxResultList;
   }
 
-  checkSendResultList(sendTxResultList) {
-    const txHashList = sendTxResultList.filter(sendTxResult => {
-      return !(sendTxResult instanceof Error);
-    });
-
-    this.output.statistics.success = txHashList.length;
-    this.output.statistics.error = this.config.numberOfTransactions - txHashList.length - this.output.statistics.pass;
-    return txHashList;
-  }
-
   async process() {
     await this.initPermission();
 
@@ -215,11 +207,9 @@ class Send extends Base {
     }
 
     const sendResultList = await this.sendTxs();
-    const txHashList = this.checkSendResultList(sendResultList);
     await delay(BLOCK_TIME * 3);
     const finishBlock = await this.getRecentBlockInformation(['timestamp', 'number']);
 
-    this.output.txHashList = txHashList;
     this.output.startBlockNumber = startBlock.number;
     this.output.finishBlockNumber = finishBlock.number;
     this.output.statistics.blockDuration = finishBlock.timestamp - startBlock.timestamp;
