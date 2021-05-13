@@ -5,12 +5,11 @@ const moment = require('moment-timezone');
 const { JobStatus, JobType } = require('../constants');
 const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 const debugMode = !!process.env.DEBUG;
-const resultDir = `result_${moment().tz('Asia/Seoul').format('MM-DD_HH:mm:SS')}`;
 const startTime = new Date().getTime();
 
-function initResultDirectory() {
-  if (!fs.existsSync(resultDir)) {
-    fs.mkdirSync(resultDir);
+function initOutputDirectory(outputDirName) {
+  if (!fs.existsSync(outputDirName)) {
+    fs.mkdirSync(outputDirName);
   }
 }
 
@@ -287,7 +286,7 @@ function writeJsonlFile(filename, dataList) {
   });
 }
 
-async function writeTestResult(testList) {
+async function writeTestResult(testList, outputDirName) {
   for (const [i, test] of testList.entries()) {
     const confirmJob = test.jobList[1];
     if (confirmJob.status !== JobStatus.SUCCESS) {
@@ -296,14 +295,14 @@ async function writeTestResult(testList) {
     if (!test.config.saveTxs) {
       continue;
     }
-    const testDir = resultDir + `/s${(i + 1).toString().padStart(2, '0')}`; // s01, s02 ...
+    const testDir = outputDirName + `/s${(i + 1).toString().padStart(2, '0')}`; // s01, s02 ...
     const transactionsFile = testDir + `/transactions.jsonl`;
     fs.mkdirSync(testDir);
     await writeJsonlFile(transactionsFile, confirmJob.output.transactionList);
     confirmJob.output.transactionList = undefined;
     await delay(1000);
   }
-  console.log(`- Save result in '${resultDir}'`);
+  console.log(`- Save result in '${outputDirName}'`);
 }
 
 async function clear(testList) {
@@ -324,9 +323,9 @@ async function clear(testList) {
   console.log(`- Finish to cleanup data`);
 }
 
-async function start(benchmarkConfig) {
+async function start(benchmarkConfig, outputDirName) {
   const testList = makeTestList(benchmarkConfig);
-  initResultDirectory();
+  initOutputDirectory(outputDirName);
 
   // 'SEND' job
   await processSendJob(testList);
@@ -340,7 +339,7 @@ async function start(benchmarkConfig) {
 
   // Output
   printTestResult(testList);
-  await writeTestResult(testList);
+  await writeTestResult(testList, outputDirName);
 
   if (!debugMode) {
     await clear(testList);
