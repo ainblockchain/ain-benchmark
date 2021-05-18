@@ -5,12 +5,11 @@ const moment = require('moment-timezone');
 const { JobStatus, JobType } = require('../constants');
 const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 const debugMode = !!process.env.DEBUG;
-const resultDir = `result_${moment().tz('Asia/Seoul').format('MM-DD_HH:mm:SS')}`;
 const startTime = new Date().getTime();
 
-function initResultDirectory() {
-  if (!fs.existsSync(resultDir)) {
-    fs.mkdirSync(resultDir);
+function initOutputDirectory(outputDirName) {
+  if (!fs.existsSync(outputDirName)) {
+    fs.mkdirSync(outputDirName);
   }
 }
 
@@ -221,14 +220,13 @@ function printJobResult(testList, jobIndex) {
   console.log('');
 }
 
-function printTestResult(testList) {
+function assembleTestResult(testList) {
   console.log(`- Finish all jobs [${getRunningTime()}]`);
   console.log(`\n- Statistics`);
 
   let totalTps = 0;
   let totalTxCount = 0;
   let totalTimeoutTxCount = 0;
-  let confirmedTimeTable = {};
   const numberOfShards = getNumberOfShards(testList);
 
   for (const [i, test] of testList.entries()) {
@@ -243,28 +241,26 @@ function printTestResult(testList) {
       totalTps += tps;
       totalTxCount += confirmJob.output.statistics.transactionCount;
       totalTimeoutTxCount += confirmJob.output.statistics.timeoutTransactionCount;
-      for (const time in confirmJob.output.statistics.confirmedTimeTable) {
-        if (confirmedTimeTable[time] === undefined) {
-          confirmedTimeTable[time] = 0;
-        }
-        confirmedTimeTable[time] += confirmJob.output.statistics.confirmedTimeTable[time];
-      }
-
       console.log(`TPS: ${Number(tps).toFixed(5)} ` +
           `(${confirmJob.output.statistics.transactionCount} txs ` +
           `/ ${confirmJob.output.statistics.blockDuration / 1000} secs)`);
-      // console.log(`Loss Rate: ${confirmJob.output.statistics.lossRate}`);
-      // console.log(`Confirmed time average (ms) : ${confirmJob.output.statistics.confirmedTimeAverage}`); // TODO(csh): Delete after test
-      // console.log(`Confirmed time table (sec) : ${JSON.stringify(confirmJob.output.statistics.confirmedTimeTable, null, 2)}`); // TODO(csh): Delete after test
     }
     console.log();
   }
-  console.log(`Total TPS : ${totalTps.toFixed(5)}`);
+  totalTps = Number(totalTps.toFixed(5));
+  const lossRate = Number((totalTimeoutTxCount / totalTxCount * 100).toFixed(5));
+  console.log(`Total TPS : ${totalTps}`);
   console.log(`Number of shards (sharding paths) : ${numberOfShards}`);
   console.log(`Total timeout transaction count (A) : ${totalTimeoutTxCount}`);
   console.log(`Total transaction count (B) : ${totalTxCount}`);
-  console.log(`Total lose rate (Y): ${(totalTimeoutTxCount / totalTxCount * 100).toFixed(5) + '%'}`);
-  // console.log(`Confirmed time table : ${JSON.stringify(confirmedTimeTable, null, 2)}`); // For debug
+  console.log(`Total lose rate (Y): ${lossRate}%`);
+  // TODO: More information (e.g: CPU, Memory, Network traffic)
+  return {
+    totalTps,
+    totalTimeoutTxCount,
+    totalTxCount,
+    lossRate,
+  }
 }
 
 function writeJsonlFile(filename, dataList) {
@@ -287,7 +283,9 @@ function writeJsonlFile(filename, dataList) {
   });
 }
 
-async function writeTestResult(testList) {
+async function writeTestResult(testResult, testList, outputDirName) {
+  const outputFilePath = `${outputDirName}/result.json`;
+  await fs.writeFileSync(outputFilePath, JSON.stringify(testResult, null, 2));
   for (const [i, test] of testList.entries()) {
     const confirmJob = test.jobList[1];
     if (confirmJob.status !== JobStatus.SUCCESS) {
@@ -296,14 +294,14 @@ async function writeTestResult(testList) {
     if (!test.config.saveTxs) {
       continue;
     }
-    const testDir = resultDir + `/s${(i + 1).toString().padStart(2, '0')}`; // s01, s02 ...
+    const testDir = outputDirName + `/s${(i + 1).toString().padStart(2, '0')}`; // s01, s02 ...
     const transactionsFile = testDir + `/transactions.jsonl`;
     fs.mkdirSync(testDir);
     await writeJsonlFile(transactionsFile, confirmJob.output.transactionList);
     confirmJob.output.transactionList = undefined;
     await delay(1000);
   }
-  console.log(`- Save result in '${resultDir}'`);
+  console.log(`- Save result in '${outputDirName}'`);
 }
 
 async function clear(testList) {
@@ -324,9 +322,9 @@ async function clear(testList) {
   console.log(`- Finish to cleanup data`);
 }
 
-async function start(benchmarkConfig) {
+async function start(benchmarkConfig, outputDirName) {
   const testList = makeTestList(benchmarkConfig);
-  initResultDirectory();
+  initOutputDirectory(outputDirName);
 
   // 'SEND' job
   await processSendJob(testList);
@@ -339,8 +337,8 @@ async function start(benchmarkConfig) {
   printJobResult(testList, 1);
 
   // Output
-  printTestResult(testList);
-  await writeTestResult(testList);
+  const testResult = assembleTestResult(testList);
+  await writeTestResult(testResult, testList, outputDirName);
 
   if (!debugMode) {
     await clear(testList);

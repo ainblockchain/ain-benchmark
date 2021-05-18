@@ -6,7 +6,7 @@ A benchmark framework to measure performance of [AI Network blockchain](https://
 - Usage
 ```
 npm install
-node ain_benchmark.js sample_config.json // Need to change the configuration
+node ain_benchmark.js <config_file> [<output_directory>]
 ```
 
 - Configuration
