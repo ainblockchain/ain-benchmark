@@ -9,7 +9,7 @@ process.on('uncaughtException', (err) => {
 });
 
 function checkArgs() {
-  if (process.argv.length < 3 && process.argv.length > 4) {
+  if (process.argv.length < 3 || process.argv.length > 4) {
     console.log('Usage: node ain_benchmark.js <config file>');
     throw Error('Invalid arguments');
   }
