@@ -248,12 +248,12 @@ function assembleTestResult(testList) {
     console.log();
   }
   totalTps = Number(totalTps.toFixed(5));
-  const lossRate = (totalTimeoutTxCount / totalTxCount * 100).toFixed(5) + '%';
+  const lossRate = Number((totalTimeoutTxCount / totalTxCount * 100).toFixed(5));
   console.log(`Total TPS : ${totalTps}`);
   console.log(`Number of shards (sharding paths) : ${numberOfShards}`);
   console.log(`Total timeout transaction count (A) : ${totalTimeoutTxCount}`);
   console.log(`Total transaction count (B) : ${totalTxCount}`);
-  console.log(`Total lose rate (Y): ${lossRate}`);
+  console.log(`Total lose rate (Y): ${lossRate}%`);
   // TODO: More information (e.g: CPU, Memory, Network traffic)
   return {
     totalTps,
