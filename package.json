@@ -21,6 +21,7 @@
   "dependencies": {
     "@ainblockchain/ain-js": "^1.1.5",
     "@ainblockchain/ain-util": "^1.1.6",
+    "@google-cloud/monitoring": "^2.3.1",
     "axios": "^0.21.1",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
