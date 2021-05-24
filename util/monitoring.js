@@ -7,25 +7,11 @@ function getValueFromPoint(point) {
   return _.get(point, `value.${valueKey}`);
 }
 
-async function getCpuUsageInfo(client, projectId, instanceName, startTime, endTime) {
-  const cpuUsageFilter = `metric.labels.instance_name = "${instanceName}" AND metric.type="compute.googleapis.com/instance/cpu/utilization"`;
-  const cpuUsageRequest = {
-    name: client.projectPath(projectId),
-    filter: cpuUsageFilter,
-    interval: {
-      startTime: {
-        seconds: startTime / 1000,
-      },
-      endTime: {
-        seconds: endTime / 1000,
-      },
-    },
-  };
-
-  const [timeSeriesList] = await client.listTimeSeries(cpuUsageRequest);
+async function requestAndAssembleInfo(client, request) {
+  const [timeSeriesList] = await client.listTimeSeries(request);
   if (timeSeriesList.length === 0) {
     return {
-      err: `Can't find ${instanceName}`,
+      err: `Can't find information`,
     };
   }
   const timeSeries = timeSeriesList[0];
@@ -40,6 +26,23 @@ async function getCpuUsageInfo(client, projectId, instanceName, startTime, endTi
     return getValueFromPoint(p);
   }));
   return info;
+}
+
+async function getCpuUsageInfo(client, projectId, instanceName, startTime, endTime) {
+  const filter = `metric.labels.instance_name = "${instanceName}" AND metric.type="compute.googleapis.com/instance/cpu/utilization"`;
+  const request = {
+    name: client.projectPath(projectId),
+    filter: filter,
+    interval: {
+      startTime: {
+        seconds: startTime / 1000,
+      },
+      endTime: {
+        seconds: endTime / 1000,
+      },
+    },
+  };
+  return requestAndAssembleInfo(client, request);
 }
 
 async function getMonitoringInfo(projectId, instanceName, keyFilename, startTime, endTime) {
