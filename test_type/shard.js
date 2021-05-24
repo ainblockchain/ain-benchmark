@@ -1,5 +1,6 @@
 // TODO(csh): Need refactoring
 const request = require('../util/request');
+const {getMonitoringInfo} = require('../util/monitoring');
 const fs = require('fs');
 const moment = require('moment-timezone');
 const { JobStatus, JobType } = require('../constants');
@@ -22,6 +23,9 @@ function makeTestList(benchmarkConfig) {
         duration: benchmarkConfig.duration,
         numberOfTransactions: benchmarkConfig.numberOfTransactions,
         saveTxs: benchmarkConfig.saveTxs || false,
+        monitoring: {
+          ...benchmarkConfig.monitoring,
+        },
         ...target,
       },
       jobList: [],
@@ -322,14 +326,32 @@ async function clear(testList) {
   console.log(`- Finish to cleanup data`);
 }
 
+async function checkAndWriteMonitoringInfo(benchmarkConfig, startTime, endTime, testResult) {
+  const monitoringConfig = benchmarkConfig.monitoring;
+  if (!monitoringConfig || !monitoringConfig.enable) {
+    return;
+  }
+  if (!monitoringConfig.projectId || !monitoringConfig.instanceName ||
+      !monitoringConfig.keyFilename) {
+    console.log(`Invalid monitoring config`);
+    return;
+  }
+
+  const monitoringInfo = await getMonitoringInfo(monitoringConfig.projectId,
+      monitoringConfig.instanceName, monitoringConfig.keyFilename, startTime, endTime);
+  testResult.monitoring = monitoringInfo;
+}
+
 async function start(benchmarkConfig, outputDirName) {
   const testList = makeTestList(benchmarkConfig);
   initOutputDirectory(outputDirName);
 
+  const sendStartTime = Date.now();
   // 'SEND' job
   await processSendJob(testList);
   await waitJob(testList, 0);
   printJobResult(testList, 0);
+  const sendEndTime = Date.now();
 
   // 'CONFIRM' job
   await processConfirmJob(testList);
@@ -338,6 +360,7 @@ async function start(benchmarkConfig, outputDirName) {
 
   // Output
   const testResult = assembleTestResult(testList);
+  await checkAndWriteMonitoringInfo(benchmarkConfig, sendStartTime, sendEndTime, testResult);
   await writeTestResult(testResult, testList, outputDirName);
 
   if (!debugMode) {
