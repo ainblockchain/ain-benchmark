@@ -45,6 +45,52 @@ async function getCpuUsageInfo(client, projectId, instanceName, startTime, endTi
   return requestAndAssembleInfo(client, request);
 }
 
+async function getNetworkSentInfo(client, projectId, instanceName, startTime, endTime) {
+  const filter = `metric.labels.instance_name = "${instanceName}" AND metric.type="compute.googleapis.com/instance/network/sent_bytes_count"`;
+  const request = {
+    name: client.projectPath(projectId),
+    filter: filter,
+    interval: {
+      startTime: {
+        seconds: startTime / 1000,
+      },
+      endTime: {
+        seconds: endTime / 1000,
+      },
+    },
+    aggregation: {
+      alignmentPeriod: {
+        seconds: 60,
+      },
+      perSeriesAligner: 'ALIGN_RATE',
+    },
+  };
+  return requestAndAssembleInfo(client, request);
+}
+
+async function getNetworkReceivedInfo(client, projectId, instanceName, startTime, endTime) {
+  const filter = `metric.labels.instance_name = "${instanceName}" AND metric.type="compute.googleapis.com/instance/network/received_bytes_count"`;
+  const request = {
+    name: client.projectPath(projectId),
+    filter: filter,
+    interval: {
+      startTime: {
+        seconds: startTime / 1000,
+      },
+      endTime: {
+        seconds: endTime / 1000,
+      },
+    },
+    aggregation: {
+      alignmentPeriod: {
+        seconds: 60,
+      },
+      perSeriesAligner: 'ALIGN_RATE',
+    },
+  };
+  return requestAndAssembleInfo(client, request);
+}
+
 async function getMonitoringInfo(projectId, instanceName, keyFilename, startTime, endTime) {
   if (!fs.existsSync(keyFilename)) {
     return {
@@ -54,6 +100,9 @@ async function getMonitoringInfo(projectId, instanceName, keyFilename, startTime
   const monitoringClient = new googleMonitoring.MetricServiceClient({keyFilename});
   const info = {};
   info.cpuUsage = await getCpuUsageInfo(monitoringClient, projectId, instanceName, startTime, endTime);
+  info.network = {};
+  info.network.incoming = await getNetworkReceivedInfo(monitoringClient, projectId, instanceName, startTime, endTime);
+  info.network.outgoing = await getNetworkSentInfo(monitoringClient, projectId, instanceName, startTime, endTime);
   return info;
 }
 
