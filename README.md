@@ -16,6 +16,12 @@ node ain_benchmark.js <config_file> [<output_directory>]
 {
   "duration": <Sending duration>, // 600 ('600' means 10 minutes)
   "numberOfTransactions": <Number of sending transactions>, // 60000 ('duration: 600, numberOfTransactions: 60000' means testing 100 tps during 10 minutes)
+  "monitoring": { // Optional
+    "enable": true,
+    "projectId": "testnet-staging-ground",
+    "instanceName": "staging-node-1-oregon",
+    "keyFilename": "./testnet-staging-ground.json" // google service account
+  },
   "targetList": [
     {
       "workerUrl": <Worker URL>, // "http://worker1.com:3001/" (Make sure to set up a worker node.)
