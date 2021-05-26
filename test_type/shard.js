@@ -325,7 +325,7 @@ async function clear(testList) {
   console.log(`- Finish to cleanup data`);
 }
 
-async function checkAndWriteMonitoringInfo(benchmarkConfig, startTime, endTime, testResult) {
+async function getMonitoringInfo(benchmarkConfig, startTime, endTime) {
   const monitoringConfig = benchmarkConfig.monitoring;
   if (!monitoringConfig || !monitoringConfig.enable) {
     return;
@@ -336,9 +336,8 @@ async function checkAndWriteMonitoringInfo(benchmarkConfig, startTime, endTime, 
     return;
   }
 
-  const monitoringInfo = await getMonitoringInfoFromGoogleCloud(monitoringConfig.projectId,
+  return await getMonitoringInfoFromGoogleCloud(monitoringConfig.projectId,
       monitoringConfig.instanceName, monitoringConfig.keyFilename, startTime, endTime);
-  testResult.monitoring = monitoringInfo;
 }
 
 async function start(benchmarkConfig, outputDirName) {
@@ -359,7 +358,7 @@ async function start(benchmarkConfig, outputDirName) {
 
   // Output
   const testResult = assembleTestResult(testList);
-  await checkAndWriteMonitoringInfo(benchmarkConfig, sendStartTime, sendEndTime, testResult);
+  testResult.monitoring = await getMonitoringInfo(benchmarkConfig, sendStartTime, sendEndTime, testResult);
   await writeTestResult(testResult, testList, outputDirName);
 
   if (!debugMode) {
