@@ -1,5 +1,6 @@
 // TODO(csh): Need refactoring
 const request = require('../util/request');
+const {getMonitoringInfoFromGoogleCloud} = require('../util/monitoring');
 const fs = require('fs');
 const moment = require('moment-timezone');
 const { JobStatus, JobType } = require('../constants');
@@ -22,6 +23,9 @@ function makeTestList(benchmarkConfig) {
         duration: benchmarkConfig.duration,
         numberOfTransactions: benchmarkConfig.numberOfTransactions,
         saveTxs: benchmarkConfig.saveTxs || false,
+        monitoring: {
+          ...benchmarkConfig.monitoring,
+        },
         ...target,
       },
       jobList: [],
@@ -254,7 +258,6 @@ function assembleTestResult(testList) {
   console.log(`Total timeout transaction count (A) : ${totalTimeoutTxCount}`);
   console.log(`Total transaction count (B) : ${totalTxCount}`);
   console.log(`Total lose rate (Y): ${lossRate}%`);
-  // TODO: More information (e.g: CPU, Memory, Network traffic)
   return {
     totalTps,
     totalTimeoutTxCount,
@@ -322,14 +325,31 @@ async function clear(testList) {
   console.log(`- Finish to cleanup data`);
 }
 
+async function getMonitoringInfo(benchmarkConfig, startTime, endTime) {
+  const monitoringConfig = benchmarkConfig.monitoring;
+  if (!monitoringConfig || !monitoringConfig.enable) {
+    return;
+  }
+  if (!monitoringConfig.projectId || !monitoringConfig.instanceName ||
+      !monitoringConfig.keyFilename) {
+    console.log(`Invalid monitoring config`);
+    return;
+  }
+
+  return await getMonitoringInfoFromGoogleCloud(monitoringConfig.projectId,
+      monitoringConfig.instanceName, monitoringConfig.keyFilename, startTime, endTime);
+}
+
 async function start(benchmarkConfig, outputDirName) {
   const testList = makeTestList(benchmarkConfig);
   initOutputDirectory(outputDirName);
 
+  const sendStartTime = Date.now();
   // 'SEND' job
   await processSendJob(testList);
   await waitJob(testList, 0);
   printJobResult(testList, 0);
+  const sendEndTime = Date.now();
 
   // 'CONFIRM' job
   await processConfirmJob(testList);
@@ -338,6 +358,7 @@ async function start(benchmarkConfig, outputDirName) {
 
   // Output
   const testResult = assembleTestResult(testList);
+  testResult.monitoring = await getMonitoringInfo(benchmarkConfig, sendStartTime, sendEndTime, testResult);
   await writeTestResult(testResult, testList, outputDirName);
 
   if (!debugMode) {
