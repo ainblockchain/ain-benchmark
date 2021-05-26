@@ -28,9 +28,8 @@ async function requestAndAssembleInfo(client, request) {
   return info;
 }
 
-async function getCpuUsageInfo(client, projectId, instanceName, startTime, endTime) {
-  const filter = `metric.labels.instance_name = "${instanceName}" AND metric.type="compute.googleapis.com/instance/cpu/utilization"`;
-  const request = {
+function makeRequest(client, projectId, filter, startTime, endTime) {
+  return {
     name: client.projectPath(projectId),
     filter: filter,
     interval: {
@@ -42,51 +41,34 @@ async function getCpuUsageInfo(client, projectId, instanceName, startTime, endTi
       },
     },
   };
+}
+
+async function getCpuUsageInfo(client, projectId, instanceName, startTime, endTime) {
+  const filter = `metric.labels.instance_name = "${instanceName}" AND metric.type="compute.googleapis.com/instance/cpu/utilization"`;
+  const request = makeRequest(client, projectId, filter, startTime, endTime);
   return requestAndAssembleInfo(client, request);
 }
 
 async function getNetworkSentInfo(client, projectId, instanceName, startTime, endTime) {
   const filter = `metric.labels.instance_name = "${instanceName}" AND metric.type="compute.googleapis.com/instance/network/sent_bytes_count"`;
-  const request = {
-    name: client.projectPath(projectId),
-    filter: filter,
-    interval: {
-      startTime: {
-        seconds: startTime / 1000,
-      },
-      endTime: {
-        seconds: endTime / 1000,
-      },
+  const request = makeRequest(client, projectId, filter, startTime, endTime);
+  request.aggregation = {
+    alignmentPeriod: {
+      seconds: 60,
     },
-    aggregation: {
-      alignmentPeriod: {
-        seconds: 60,
-      },
-      perSeriesAligner: 'ALIGN_RATE',
-    },
+    perSeriesAligner: 'ALIGN_RATE',
   };
   return requestAndAssembleInfo(client, request);
 }
 
 async function getNetworkReceivedInfo(client, projectId, instanceName, startTime, endTime) {
   const filter = `metric.labels.instance_name = "${instanceName}" AND metric.type="compute.googleapis.com/instance/network/received_bytes_count"`;
-  const request = {
-    name: client.projectPath(projectId),
-    filter: filter,
-    interval: {
-      startTime: {
-        seconds: startTime / 1000,
-      },
-      endTime: {
-        seconds: endTime / 1000,
-      },
+  const request = makeRequest(client, projectId, filter, startTime, endTime);
+  request.aggregation = {
+    alignmentPeriod: {
+      seconds: 60,
     },
-    aggregation: {
-      alignmentPeriod: {
-        seconds: 60,
-      },
-      perSeriesAligner: 'ALIGN_RATE',
-    },
+    perSeriesAligner: 'ALIGN_RATE',
   };
   return requestAndAssembleInfo(client, request);
 }
