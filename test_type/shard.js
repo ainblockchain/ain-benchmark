@@ -1,6 +1,6 @@
 // TODO(csh): Need refactoring
 const request = require('../util/request');
-const {getMonitoringInfo} = require('../util/monitoring');
+const {getMonitoringInfoFromGoogleCloud} = require('../util/monitoring');
 const fs = require('fs');
 const moment = require('moment-timezone');
 const { JobStatus, JobType } = require('../constants');
@@ -336,7 +336,7 @@ async function checkAndWriteMonitoringInfo(benchmarkConfig, startTime, endTime, 
     return;
   }
 
-  const monitoringInfo = await getMonitoringInfo(monitoringConfig.projectId,
+  const monitoringInfo = await getMonitoringInfoFromGoogleCloud(monitoringConfig.projectId,
       monitoringConfig.instanceName, monitoringConfig.keyFilename, startTime, endTime);
   testResult.monitoring = monitoringInfo;
 }

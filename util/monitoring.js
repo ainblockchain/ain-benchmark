@@ -91,7 +91,7 @@ async function getNetworkReceivedInfo(client, projectId, instanceName, startTime
   return requestAndAssembleInfo(client, request);
 }
 
-async function getMonitoringInfo(projectId, instanceName, keyFilename, startTime, endTime) {
+async function getMonitoringInfoFromGoogleCloud(projectId, instanceName, keyFilename, startTime, endTime) {
   if (!fs.existsSync(keyFilename)) {
     return {
       err: `Can't find ${keyFilename}`,
@@ -107,5 +107,5 @@ async function getMonitoringInfo(projectId, instanceName, keyFilename, startTime
 }
 
 module.exports = {
-  getMonitoringInfo,
+  getMonitoringInfoFromGoogleCloud,
 };
