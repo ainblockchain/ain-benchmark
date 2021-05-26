@@ -258,7 +258,6 @@ function assembleTestResult(testList) {
   console.log(`Total timeout transaction count (A) : ${totalTimeoutTxCount}`);
   console.log(`Total transaction count (B) : ${totalTxCount}`);
   console.log(`Total lose rate (Y): ${lossRate}%`);
-  // TODO: More information (e.g: CPU, Memory, Network traffic)
   return {
     totalTps,
     totalTimeoutTxCount,
