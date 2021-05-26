@@ -4,7 +4,7 @@ const fs = require('fs');
 
 function getValueFromPoint(point) {
   const valueKey = _.get(point, 'value.value');
-  return _.get(point, `value.${valueKey}`);
+  return _.get(point, `value.${valueKey}`, 0);
 }
 
 async function requestAndAssembleInfo(client, request) {
