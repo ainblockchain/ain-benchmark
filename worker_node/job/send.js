@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const Base = require('./base');
 const Ain = require('@ainblockchain/ain-js').default;
 const { BLOCKCHAIN_PROTOCOL_VERSION } = require('@ainblockchain/ain-js/lib/constants');
@@ -64,13 +65,16 @@ class Send extends Base {
     const stakingTx = {
       operation: {
         type: 'SET_VALUE',
-        ref: `/staking/test/${this.config.ainAddress}/stake/${Date.now()}/value`,
+        ref: `/staking/test/${this.config.ainAddress}/0/stake/${Date.now()}/value`,
         value: 1,
         is_global: true,
       },
       nonce: -1
     };
-    await this.#ain.sendTransaction(stakingTx);
+    const stakingTxResult = await this.#ain.sendTransaction(stakingTx);
+    if (_.get(stakingTxResult, 'result.code') !== 0) {
+      throw Error(`Error while write staking tx (${JSON.stringify(stakingTxResult)})`);
+    }
 
     const manageAppCreateTx = {
       operation: {
@@ -85,7 +89,10 @@ class Send extends Base {
       },
       nonce: -1,
     };
-    await this.#ain.sendTransaction(manageAppCreateTx);
+    const manageAppTxResult = await this.#ain.sendTransaction(manageAppCreateTx);
+    if (_.get(manageAppTxResult, 'result.code') !== 0) {
+      throw Error(`Error while write manage app config (${JSON.stringify(manageAppTxResult)})`);
+    }
     await delay(3 * BLOCK_TIME);
 
     const path = this.config.transactionOperation.ref;
