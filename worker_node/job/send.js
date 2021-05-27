@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const Base = require('./base');
 const Ain = require('@ainblockchain/ain-js').default;
 const { BLOCKCHAIN_PROTOCOL_VERSION } = require('@ainblockchain/ain-js/lib/constants');
@@ -61,55 +62,40 @@ class Send extends Base {
   }
 
   async initPermission() {
-    const path = this.config.transactionOperation.ref;
-    const setOwnerTx = {
-      operation: {
-        type: 'SET_OWNER',
-        ref: path,
-        value: {
-          '.owner': {
-            owners: {
-              '*': {
-                write_owner: true,
-                write_rule: true,
-                write_function: true,
-                branch_owner: true,
-              },
-            },
-          },
-        },
-        is_global: true
-      },
-      nonce: -1,
-    };
-    const setRuleTx = {
-      operation: {
-        type: 'SET_RULE',
-        ref: path,
-        value: {
-          '.write': true,
-        },
-        is_global: true
-      },
-      nonce: -1,
-    };
-    const setValueTx = {
+    const stakingTx = {
       operation: {
         type: 'SET_VALUE',
-        ref: path,
-        value: 0,
-        is_global: true
+        ref: `/staking/test/${this.config.ainAddress}/0/stake/${Date.now()}/value`,
+        value: 1,
+        is_global: true,
+      },
+      nonce: -1
+    };
+    const stakingTxResult = await this.#ain.sendTransaction(stakingTx);
+    if (_.get(stakingTxResult, 'result.code') !== 0) {
+      throw Error(`Error while write staking tx (${JSON.stringify(stakingTxResult)})`);
+    }
+
+    const manageAppCreateTx = {
+      operation: {
+        type: 'SET_VALUE',
+        ref: `/manage_app/test/create/${Date.now()}`,
+        value: {
+          admin: { [this.config.ainAddress]: true },
+          service: {
+            staking: { lockup_duration: 2592000000 },
+          },
+        },
       },
       nonce: -1,
     };
-    await this.#ain.sendTransactionBatch([
-      setOwnerTx,
-      setRuleTx,
-      setValueTx,
-    ]);
+    const manageAppTxResult = await this.#ain.sendTransaction(manageAppCreateTx);
+    if (_.get(manageAppTxResult, 'result.code') !== 0) {
+      throw Error(`Error while write manage app config (${JSON.stringify(manageAppTxResult)})`);
+    }
+    await delay(3 * BLOCK_TIME);
 
-    await delay(2 * BLOCK_TIME);
-
+    const path = this.config.transactionOperation.ref;
     // TODO: update ain-js to support is_global and use ain-js here
     const response = await request({
       method: 'post',
