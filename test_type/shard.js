@@ -263,6 +263,7 @@ function assembleTestResult(testList) {
     totalTimeoutTxCount,
     totalTxCount,
     lossRate,
+    testList,
   }
 }
 
