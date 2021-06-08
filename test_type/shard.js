@@ -345,12 +345,12 @@ async function start(benchmarkConfig, outputDirName) {
   const testList = makeTestList(benchmarkConfig);
   initOutputDirectory(outputDirName);
 
-  const sendStartTime = Date.now();
+  const testStartTime = Date.now();
   // 'SEND' job
   await processSendJob(testList);
   await waitJob(testList, 0);
   printJobResult(testList, 0);
-  const sendEndTime = Date.now();
+  const testEndTime = Date.now();
 
   // 'CONFIRM' job
   await processConfirmJob(testList);
@@ -359,7 +359,7 @@ async function start(benchmarkConfig, outputDirName) {
 
   // Output
   const testResult = assembleTestResult(testList);
-  testResult.monitoring = await getMonitoringInfo(benchmarkConfig, sendStartTime, sendEndTime, testResult);
+  testResult.monitoring = await getMonitoringInfo(benchmarkConfig, testStartTime, testEndTime, testResult);
   await writeTestResult(testResult, testList, outputDirName);
 
   if (!debugMode) {
