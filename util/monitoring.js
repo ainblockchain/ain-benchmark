@@ -15,7 +15,9 @@ async function requestAndAssembleInfo(client, request) {
     };
   }
   const timeSeries = timeSeriesList[0];
-  const points = _.get(timeSeries, 'points');
+  const points = _.get(timeSeries, 'points', []).sort((a, b) => {
+    return a.interval.startTime.seconds - b.interval.startTime.seconds;
+  });
   const info = {};
   info.start = getValueFromPoint(points[0]);
   info.end = getValueFromPoint(points[points.length - 1]);
