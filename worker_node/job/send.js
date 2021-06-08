@@ -62,36 +62,44 @@ class Send extends Base {
   }
 
   async initPermission() {
-    const stakingTx = {
-      operation: {
-        type: 'SET_VALUE',
-        ref: `/staking/test/${this.config.ainAddress}/0/stake/${Date.now()}/value`,
-        value: 1,
-        is_global: true,
-      },
-      nonce: -1
-    };
-    const stakingTxResult = await this.#ain.sendTransaction(stakingTx);
-    if (_.get(stakingTxResult, 'result.code') !== 0) {
-      throw Error(`Error while write staking tx (${JSON.stringify(stakingTxResult)})`);
+    const stakingBasePath = `/staking/test/${this.config.ainAddress}/0/stake`;
+    const stakingBaseValue = await this.#ain.db.ref(stakingBasePath).getValue();
+    if (stakingBaseValue === null) {
+      const stakingTx = {
+        operation: {
+          type: 'SET_VALUE',
+          ref: `${stakingBasePath}/${Date.now()}/value`,
+          value: 1,
+          is_global: true,
+        },
+        nonce: -1
+      };
+      const stakingTxResult = await this.#ain.sendTransaction(stakingTx);
+      if (_.get(stakingTxResult, 'result.code') !== 0) {
+        throw Error(`Error while write staking tx (${JSON.stringify(stakingTxResult)})`);
+      }
     }
 
-    const manageAppCreateTx = {
-      operation: {
-        type: 'SET_VALUE',
-        ref: `/manage_app/test/create/${Date.now()}`,
-        value: {
-          admin: { [this.config.ainAddress]: true },
-          service: {
-            staking: { lockup_duration: 2592000000 },
+    const manageAppConfigPath = `/manage_app/test/config`;
+    const manageAppConfigValue = await this.#ain.db.ref(manageAppConfigPath).getValue();
+    if (manageAppConfigValue === null) {
+      const manageAppCreateTx = {
+        operation: {
+          type: 'SET_VALUE',
+          ref: `/manage_app/test/create/${Date.now()}`,
+          value: {
+            admin: { [this.config.ainAddress]: true },
+            service: {
+              staking: { lockup_duration: 2592000000 },
+            },
           },
         },
-      },
-      nonce: -1,
-    };
-    const manageAppTxResult = await this.#ain.sendTransaction(manageAppCreateTx);
-    if (_.get(manageAppTxResult, 'result.code') !== 0) {
-      throw Error(`Error while write manage app config (${JSON.stringify(manageAppTxResult)})`);
+        nonce: -1,
+      };
+      const manageAppTxResult = await this.#ain.sendTransaction(manageAppCreateTx);
+      if (_.get(manageAppTxResult, 'result.code') !== 0) {
+        throw Error(`Error while write manage app config (${JSON.stringify(manageAppTxResult)})`);
+      }
     }
     await delay(3 * BLOCK_TIME);
 
