@@ -129,7 +129,7 @@ class Send extends Base {
   }
 
   async sendTxs() {
-    const delayTime = this.config.duration / this.config.numberOfTransactions * 1000;
+    const delayTime = (this.config.duration / this.config.numberOfTransactions * 1000) * 0.97;
     const sendTxPromiseList = [];
     const consecutivePath = this.config.consecutivePath === true;
     const consecutiveValue = this.config.consecutiveValue === true;
