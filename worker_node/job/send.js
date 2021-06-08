@@ -62,7 +62,12 @@ class Send extends Base {
   }
 
   async initPermission() {
-    const stakingBasePath = `/staking/test/${this.config.ainAddress}/0/stake`;
+    const appName = (this.config.transactionOperation.ref).split('/')[2];
+    if (!appName) {
+      throw Error(`Can't find appName from transactionOperation.ref ` +
+          `(${this.config.transactionOperation.ref})`);
+    }
+    const stakingBasePath = `/staking/${appName}/${this.config.ainAddress}/0/stake`;
     const stakingBaseValue = await this.#ain.db.ref(stakingBasePath).getValue();
     if (stakingBaseValue === null) {
       const stakingTx = {
@@ -80,13 +85,13 @@ class Send extends Base {
       }
     }
 
-    const manageAppConfigPath = `/manage_app/test/config`;
+    const manageAppConfigPath = `/manage_app/${appName}/config`;
     const manageAppConfigValue = await this.#ain.db.ref(manageAppConfigPath).getValue();
     if (manageAppConfigValue === null) {
       const manageAppCreateTx = {
         operation: {
           type: 'SET_VALUE',
-          ref: `/manage_app/test/create/${Date.now()}`,
+          ref: `/manage_app/${appName}/create/${Date.now()}`,
           value: {
             admin: { [this.config.ainAddress]: true },
             service: {
