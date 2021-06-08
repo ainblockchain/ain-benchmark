@@ -345,17 +345,23 @@ async function start(benchmarkConfig, outputDirName) {
   const testList = makeTestList(benchmarkConfig);
   initOutputDirectory(outputDirName);
 
+  await delay(60 * 1000);
   const testStartTime = Date.now();
+  await delay(60 * 1000);
+
   // 'SEND' job
   await processSendJob(testList);
   await waitJob(testList, 0);
   printJobResult(testList, 0);
-  const testEndTime = Date.now();
 
   // 'CONFIRM' job
   await processConfirmJob(testList);
   await waitJob(testList, 1);
   printJobResult(testList, 1);
+
+  // Wait (GCP is delayed by 3 minutes)
+  await delay(4 * 60 * 1000);
+  const testEndTime = Date.now();
 
   // Output
   const testResult = assembleTestResult(testList);
