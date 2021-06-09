@@ -76,7 +76,6 @@ class Send extends Base {
           type: 'SET_VALUE',
           ref: stakingPath,
           value: 1,
-          is_global: true,
         },
         nonce: -1
       };
