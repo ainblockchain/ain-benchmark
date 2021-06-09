@@ -67,13 +67,14 @@ class Send extends Base {
       throw Error(`Can't find appName from transactionOperation.ref ` +
           `(${this.config.transactionOperation.ref})`);
     }
-    const stakingBasePath = `/staking/${appName}/${this.config.ainAddress}/0/stake`;
-    const stakingBaseValue = await this.#ain.db.ref(stakingBasePath).getValue();
-    if (stakingBaseValue === null) {
+    const stakingAppPath = `/staking/${appName}`;
+    const stakingBalance = await this.#ain.db.ref(`${stakingAppPath}/balance_total`).getValue();
+    if (stakingBalance === null) {
+      const stakingPath = `${stakingAppPath}/${this.config.ainAddress}/0/stake/${Date.now()}/value`;
       const stakingTx = {
         operation: {
           type: 'SET_VALUE',
-          ref: `${stakingBasePath}/${Date.now()}/value`,
+          ref: stakingPath,
           value: 1,
           is_global: true,
         },
