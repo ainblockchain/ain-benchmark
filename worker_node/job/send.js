@@ -62,36 +62,49 @@ class Send extends Base {
   }
 
   async initPermission() {
-    const stakingTx = {
-      operation: {
-        type: 'SET_VALUE',
-        ref: `/staking/test/${this.config.ainAddress}/0/stake/${Date.now()}/value`,
-        value: 1,
-        is_global: true,
-      },
-      nonce: -1
-    };
-    const stakingTxResult = await this.#ain.sendTransaction(stakingTx);
-    if (_.get(stakingTxResult, 'result.code') !== 0) {
-      throw Error(`Error while write staking tx (${JSON.stringify(stakingTxResult)})`);
+    const appName = (this.config.transactionOperation.ref).split('/')[2];
+    if (!appName) {
+      throw Error(`Can't find appName from transactionOperation.ref ` +
+          `(${this.config.transactionOperation.ref})`);
+    }
+    const stakingAppPath = `/staking/${appName}`;
+    const stakingBalance = await this.#ain.db.ref(`${stakingAppPath}/balance_total`).getValue();
+    if (stakingBalance === null) {
+      const stakingPath = `${stakingAppPath}/${this.config.ainAddress}/0/stake/${Date.now()}/value`;
+      const stakingTx = {
+        operation: {
+          type: 'SET_VALUE',
+          ref: stakingPath,
+          value: 1,
+        },
+        nonce: -1
+      };
+      const stakingTxResult = await this.#ain.sendTransaction(stakingTx);
+      if (_.get(stakingTxResult, 'result.code') !== 0) {
+        throw Error(`Error while write staking tx (${JSON.stringify(stakingTxResult)})`);
+      }
     }
 
-    const manageAppCreateTx = {
-      operation: {
-        type: 'SET_VALUE',
-        ref: `/manage_app/test/create/${Date.now()}`,
-        value: {
-          admin: { [this.config.ainAddress]: true },
-          service: {
-            staking: { lockup_duration: 2592000000 },
+    const manageAppConfigPath = `/manage_app/${appName}/config`;
+    const manageAppConfigValue = await this.#ain.db.ref(manageAppConfigPath).getValue();
+    if (manageAppConfigValue === null) {
+      const manageAppCreateTx = {
+        operation: {
+          type: 'SET_VALUE',
+          ref: `/manage_app/${appName}/create/${Date.now()}`,
+          value: {
+            admin: { [this.config.ainAddress]: true },
+            service: {
+              staking: { lockup_duration: 2592000000 },
+            },
           },
         },
-      },
-      nonce: -1,
-    };
-    const manageAppTxResult = await this.#ain.sendTransaction(manageAppCreateTx);
-    if (_.get(manageAppTxResult, 'result.code') !== 0) {
-      throw Error(`Error while write manage app config (${JSON.stringify(manageAppTxResult)})`);
+        nonce: -1,
+      };
+      const manageAppTxResult = await this.#ain.sendTransaction(manageAppCreateTx);
+      if (_.get(manageAppTxResult, 'result.code') !== 0) {
+        throw Error(`Error while write manage app config (${JSON.stringify(manageAppTxResult)})`);
+      }
     }
     await delay(3 * BLOCK_TIME);
 
@@ -129,7 +142,6 @@ class Send extends Base {
   }
 
   async sendTxs() {
-    const delayTime = this.config.duration / this.config.numberOfTransactions * 1000;
     const sendTxPromiseList = [];
     const consecutivePath = this.config.consecutivePath === true;
     const consecutiveValue = this.config.consecutiveValue === true;
@@ -141,9 +153,13 @@ class Send extends Base {
     // const baseTimestamp = this.config.timestamp;
     const baseTx = this.makeBaseTransaction();
     const timestampSet = new Set();
+    const targetTestEndTime = Date.now() + (this.config.duration * 1000); // MS
 
     for (let i = 0; i < this.config.numberOfTransactions; i++) {
-      await delay(delayTime);
+      const delayTime = (targetTestEndTime - Date.now()) / (this.config.numberOfTransactions - i);
+      if (delayTime > 0) {
+        await delay(delayTime);
+      }
 
       const currTimestamp = Date.now();
       if (timestampSet.has(currTimestamp) ||
