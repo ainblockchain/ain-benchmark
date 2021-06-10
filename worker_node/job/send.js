@@ -157,7 +157,9 @@ class Send extends Base {
 
     for (let i = 0; i < this.config.numberOfTransactions; i++) {
       const delayTime = (targetTestEndTime - Date.now()) / (this.config.numberOfTransactions - i);
-      await delay(delayTime);
+      if (delayTime > 0) {
+        await delay(delayTime);
+      }
 
       const currTimestamp = Date.now();
       if (timestampSet.has(currTimestamp) ||
