@@ -142,8 +142,6 @@ class Send extends Base {
   }
 
   async sendTxs() {
-    const delayAdjustmentRate = 0.97;
-    const delayTime = (this.config.duration / this.config.numberOfTransactions * 1000) * delayAdjustmentRate;
     const sendTxPromiseList = [];
     const consecutivePath = this.config.consecutivePath === true;
     const consecutiveValue = this.config.consecutiveValue === true;
@@ -155,8 +153,10 @@ class Send extends Base {
     // const baseTimestamp = this.config.timestamp;
     const baseTx = this.makeBaseTransaction();
     const timestampSet = new Set();
+    const targetTestEndTime = Date.now() + (this.config.duration * 1000); // MS
 
     for (let i = 0; i < this.config.numberOfTransactions; i++) {
+      const delayTime = (targetTestEndTime - Date.now()) / (this.config.numberOfTransactions - i);
       await delay(delayTime);
 
       const currTimestamp = Date.now();
