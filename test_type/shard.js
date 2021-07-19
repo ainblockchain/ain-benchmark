@@ -354,6 +354,10 @@ async function start(benchmarkConfig, outputDirName) {
   await waitJob(testList, 0);
   printJobResult(testList, 0);
 
+  await delay(180 * 1000);
+  const sendEndTime = Date.now();
+  await delay(60 * 1000);
+
   // 'CONFIRM' job
   await processConfirmJob(testList);
   await waitJob(testList, 1);
@@ -361,11 +365,10 @@ async function start(benchmarkConfig, outputDirName) {
 
   // Wait (GCP is delayed by 3 minutes)
   await delay(4 * 60 * 1000);
-  const testEndTime = Date.now();
 
   // Output
   const testResult = assembleTestResult(testList);
-  testResult.monitoring = await getMonitoringInfo(benchmarkConfig, testStartTime, testEndTime, testResult);
+  testResult.monitoring = await getMonitoringInfo(benchmarkConfig, testStartTime, sendEndTime, testResult);
   await writeTestResult(testResult, testList, outputDirName);
 
   if (!debugMode) {
