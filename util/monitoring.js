@@ -107,7 +107,8 @@ async function getMonitoringInfoFromGoogleCloud(projectId, instanceName, keyFile
   }
   const monitoringClient = new googleMonitoring.MetricServiceClient({keyFilename});
   const info = {};
-  info.cpuUsage = await getCpuUsageInfo(monitoringClient, projectId, instanceName, startTime, endTime);
+  info.cpu = {};
+  info.cpu.usage = await getCpuUsageInfo(monitoringClient, projectId, instanceName, startTime, endTime);
   info.network = {};
   info.network.incoming = await getNetworkReceivedInfo(monitoringClient, projectId, instanceName, startTime, endTime);
   info.network.outgoing = await getNetworkSentInfo(monitoringClient, projectId, instanceName, startTime, endTime);
