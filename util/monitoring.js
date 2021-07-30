@@ -111,8 +111,9 @@ async function getMonitoringInfoFromGoogleCloud(projectId, instanceName, keyFile
   info.network = {};
   info.network.incoming = await getNetworkReceivedInfo(monitoringClient, projectId, instanceName, startTime, endTime);
   info.network.outgoing = await getNetworkSentInfo(monitoringClient, projectId, instanceName, startTime, endTime);
-  info.memoryUsage = await getMemoryUsageInfo(monitoringClient, projectId, instanceName, startTime, endTime);
-  info.memory = await getMemoryBytesInfo(monitoringClient, projectId, instanceName, startTime, endTime);
+  info.memory = {};
+  info.memory.usage = await getMemoryUsageInfo(monitoringClient, projectId, instanceName, startTime, endTime);
+  info.memory.used = await getMemoryBytesInfo(monitoringClient, projectId, instanceName, startTime, endTime);
   return info;
 }
 
