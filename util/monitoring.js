@@ -76,8 +76,26 @@ async function getNetworkReceivedInfo(client, projectId, instanceName, startTime
 }
 
 async function getMemoryUsageInfo(client, projectId, instanceName, startTime, endTime) {
-  const filter = `metric.labels.instance_name = "${instanceName}" AND metric.type="agent.googleapis.com/memory/percent_used"`;
+  const filter = `metric.type="agent.googleapis.com/memory/percent_used" AND metric.labels.state="used"`
   const request = makeRequest(client, projectId, filter, startTime, endTime);
+  request.aggregation = {
+    alignmentPeriod: {
+      seconds: 60,
+    },
+    perSeriesAligner: 'ALIGN_MEAN',
+  };
+  return requestAndAssembleInfo(client, request);
+}
+
+async function getMemoryBytesInfo(client, projectId, instanceName, startTime, endTime) {
+  const filter = `metric.type="agent.googleapis.com/memory/bytes_used" AND metric.labels.state="used"`
+  const request = makeRequest(client, projectId, filter, startTime, endTime);
+  request.aggregation = {
+    alignmentPeriod: {
+      seconds: 60,
+    },
+    perSeriesAligner: 'ALIGN_MEAN',
+  };
   return requestAndAssembleInfo(client, request);
 }
 
@@ -93,7 +111,8 @@ async function getMonitoringInfoFromGoogleCloud(projectId, instanceName, keyFile
   info.network = {};
   info.network.incoming = await getNetworkReceivedInfo(monitoringClient, projectId, instanceName, startTime, endTime);
   info.network.outgoing = await getNetworkSentInfo(monitoringClient, projectId, instanceName, startTime, endTime);
-  info.meoryUsage = await getMemoryUsageInfo(monitoringClient, projectId, instanceName, startTime, endTime);
+  info.memoryUsage = await getMemoryUsageInfo(monitoringClient, projectId, instanceName, startTime, endTime);
+  info.memory = await getMemoryBytesInfo(monitoringClient, projectId, instanceName, startTime, endTime);
   return info;
 }
 
