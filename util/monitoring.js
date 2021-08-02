@@ -45,7 +45,7 @@ function makeRequest(client, projectId, filter, startTime, endTime) {
   };
 }
 
-async function getCpuUsageInfo(client, projectId, instanceName, startTime, endTime) {
+async function getCpuUtilizationInfo(client, projectId, instanceName, startTime, endTime) {
   const filter = `metric.labels.instance_name = "${instanceName}" AND metric.type="compute.googleapis.com/instance/cpu/utilization"`;
   const request = makeRequest(client, projectId, filter, startTime, endTime);
   return requestAndAssembleInfo(client, request);
@@ -75,6 +75,30 @@ async function getNetworkReceivedInfo(client, projectId, instanceName, startTime
   return requestAndAssembleInfo(client, request);
 }
 
+async function getMemoryPercentInfo(client, projectId, startTime, endTime) {
+  const filter = `metric.type="agent.googleapis.com/memory/percent_used" AND metric.labels.state="used"`
+  const request = makeRequest(client, projectId, filter, startTime, endTime);
+  request.aggregation = {
+    alignmentPeriod: {
+      seconds: 60,
+    },
+    perSeriesAligner: 'ALIGN_MEAN',
+  };
+  return requestAndAssembleInfo(client, request);
+}
+
+async function getMemoryBytesInfo(client, projectId, startTime, endTime) {
+  const filter = `metric.type="agent.googleapis.com/memory/bytes_used" AND metric.labels.state="used"`
+  const request = makeRequest(client, projectId, filter, startTime, endTime);
+  request.aggregation = {
+    alignmentPeriod: {
+      seconds: 60,
+    },
+    perSeriesAligner: 'ALIGN_MEAN',
+  };
+  return requestAndAssembleInfo(client, request);
+}
+
 async function getMonitoringInfoFromGoogleCloud(projectId, instanceName, keyFilename, startTime, endTime) {
   if (!fs.existsSync(keyFilename)) {
     return {
@@ -83,10 +107,14 @@ async function getMonitoringInfoFromGoogleCloud(projectId, instanceName, keyFile
   }
   const monitoringClient = new googleMonitoring.MetricServiceClient({keyFilename});
   const info = {};
-  info.cpuUsage = await getCpuUsageInfo(monitoringClient, projectId, instanceName, startTime, endTime);
+  info.cpu = {};
+  info.cpu.utilization = await getCpuUtilizationInfo(monitoringClient, projectId, instanceName, startTime, endTime);
   info.network = {};
-  info.network.incoming = await getNetworkReceivedInfo(monitoringClient, projectId, instanceName, startTime, endTime);
-  info.network.outgoing = await getNetworkSentInfo(monitoringClient, projectId, instanceName, startTime, endTime);
+  info.network.receivedBytes = await getNetworkReceivedInfo(monitoringClient, projectId, instanceName, startTime, endTime);
+  info.network.sentBytes = await getNetworkSentInfo(monitoringClient, projectId, instanceName, startTime, endTime);
+  info.memory = {};
+  info.memory.percentUsed = await getMemoryPercentInfo(monitoringClient, projectId, startTime, endTime);
+  info.memory.bytesUsed = await getMemoryBytesInfo(monitoringClient, projectId, startTime, endTime);
   return info;
 }
 
