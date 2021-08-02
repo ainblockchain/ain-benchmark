@@ -45,7 +45,7 @@ function makeRequest(client, projectId, filter, startTime, endTime) {
   };
 }
 
-async function getCpuUsageInfo(client, projectId, instanceName, startTime, endTime) {
+async function getCpuUtilizationInfo(client, projectId, instanceName, startTime, endTime) {
   const filter = `metric.labels.instance_name = "${instanceName}" AND metric.type="compute.googleapis.com/instance/cpu/utilization"`;
   const request = makeRequest(client, projectId, filter, startTime, endTime);
   return requestAndAssembleInfo(client, request);
@@ -108,7 +108,7 @@ async function getMonitoringInfoFromGoogleCloud(projectId, instanceName, keyFile
   const monitoringClient = new googleMonitoring.MetricServiceClient({keyFilename});
   const info = {};
   info.cpu = {};
-  info.cpu.usage = await getCpuUsageInfo(monitoringClient, projectId, instanceName, startTime, endTime);
+  info.cpu.usage = await getCpuUtilizationInfo(monitoringClient, projectId, instanceName, startTime, endTime);
   info.network = {};
   info.network.incoming = await getNetworkReceivedInfo(monitoringClient, projectId, instanceName, startTime, endTime);
   info.network.outgoing = await getNetworkSentInfo(monitoringClient, projectId, instanceName, startTime, endTime);
