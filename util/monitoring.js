@@ -108,11 +108,11 @@ function getGrafanaLink(projectId, startTime, endTime) {
   if (!grafanaBaseLink) {
     return null;
   }
-  const widelyStartTimeDate = new Date(startTime);
-  widelyStartTimeDate.setMinutes(widelyStartTimeDate.getMinutes() - 5);
-  const widelyEndTimeDate = new Date(endTime);
-  widelyEndTimeDate.setMinutes(widelyEndTimeDate.getMinutes() + 5);
-  return `${grafanaBaseLink}?from=${widelyStartTimeDate.getTime()}&to=${widelyEndTimeDate.getTime()}`;
+  const startTimeWithBuffer = new Date(startTime);
+  startTimeWithBuffer.setMinutes(startTimeWithBuffer.getMinutes() - 5);
+  const endTimeWithBuffer = new Date(endTime);
+  endTimeWithBuffer.setMinutes(endTimeWithBuffer.getMinutes() + 5);
+  return `${grafanaBaseLink}?from=${startTimeWithBuffer.getTime()}&to=${endTimeWithBuffer.getTime()}`;
 }
 
 async function getMonitoringInfoFromGoogleCloud(projectId, instanceName, keyFilename, startTime, endTime) {
