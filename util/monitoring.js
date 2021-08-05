@@ -99,6 +99,22 @@ async function getMemoryBytesInfo(client, projectId, startTime, endTime) {
   return requestAndAssembleInfo(client, request);
 }
 
+function getGrafanaLink(projectId, startTime, endTime) {
+  // TODO: Support dev & prod
+  const grafanaBaseLinkTable = {
+    'testnet-staging-ground': 'http://35.189.163.153:3000/d/M6YpMSyMz/blockchain-servers',
+  }
+  const grafanaBaseLink = grafanaBaseLinkTable[projectId];
+  if (!grafanaBaseLink) {
+    return null;
+  }
+  const widelyStartTimeDate = new Date(startTime);
+  widelyStartTimeDate.setMinutes(widelyStartTimeDate.getMinutes() - 5);
+  const widelyEndTimeDate = new Date(endTime);
+  widelyEndTimeDate.setMinutes(widelyEndTimeDate.getMinutes() + 5);
+  return `${grafanaBaseLink}?from=${widelyStartTimeDate.getTime()}&to=${widelyEndTimeDate.getTime()}`;
+}
+
 async function getMonitoringInfoFromGoogleCloud(projectId, instanceName, keyFilename, startTime, endTime) {
   if (!fs.existsSync(keyFilename)) {
     return {
@@ -115,6 +131,8 @@ async function getMonitoringInfoFromGoogleCloud(projectId, instanceName, keyFile
   info.memory = {};
   info.memory.percentUsed = await getMemoryPercentInfo(monitoringClient, projectId, startTime, endTime);
   info.memory.bytesUsed = await getMemoryBytesInfo(monitoringClient, projectId, startTime, endTime);
+  info.grafana = {};
+  info.grafana.link = getGrafanaLink(projectId, startTime, endTime);
   return info;
 }
 
