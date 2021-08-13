@@ -13,7 +13,7 @@ const JobStatus = Object.freeze({
 });
 
 const TestType = Object.freeze({
-  SHARD: 'SHARD',
+  TPS: 'TPS',
   CROSS_SHARD: 'CROSS_SHARD',
 });
 
