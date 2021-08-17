@@ -1,5 +1,6 @@
-const ShardTest = require('./test_type/shard');
+const TpsTest = require('./test_type/tps');
 const CrossShardTest = require('./test_type/cross_shard');
+const QpsTest = require('./test_type/qps');
 const { TestType } = require('./constants');
 const fs = require('fs');
 const moment = require('moment-timezone');
@@ -27,13 +28,15 @@ async function startTest(benchmarkConfig, outputDirName) {
     outputDirName = `result_${moment().tz('Asia/Seoul').format('MM-DD_HH:mm:SS')}`;
   }
 
-  if (testType === TestType.SHARD) {
-    startFunc = ShardTest.start;
+  if (testType === TestType.TPS) {
+    startFunc = TpsTest.start;
   } else if (testType === TestType.CROSS_SHARD) {
     startFunc = CrossShardTest.start;
+  } else if (testType === TestType.QPS) {
+    startFunc = QpsTest.start;
   } else {
-    console.log(`testType config is missing. Proceed with default test type (SHARD)`);
-    startFunc = ShardTest.start;
+    console.log(`testType config is missing. Proceed with default test type (TPS)`);
+    startFunc = TpsTest.start;
   }
 
   if (!startFunc) {

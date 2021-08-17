@@ -11,9 +11,10 @@ node ain_benchmark.js <config_file> [<output_directory>]
 
 - Configuration
 
-### Shard Test
+### TPS
 ```
 {
+  "testType": "TPS",
   "duration": <Sending duration>, // 600 ('600' means 10 minutes)
   "numberOfTransactions": <Number of sending transactions>, // 60000 ('duration: 600, numberOfTransactions: 60000' means testing 100 tps during 10 minutes)
   "monitoring": { // Optional
@@ -43,6 +44,32 @@ node ain_benchmark.js <config_file> [<output_directory>]
         "type": <Operation type>, // "SET_VALUE"
         "ref": <Operation reference>, // "/apps/test/2"
         "value": <Value> // 1
+      }
+    }
+  ]
+}
+```
+
+### QPS
+```
+{
+  "testType": "QPS",
+  "duration": 30,
+  "numberOfCalls": 300,
+  "targetList": [
+    {
+      "method": "POST",
+      "workerUrl": "http://localhost:3001/",
+      "ainUrl": "http://localhost:8081/json-rpc",
+      "body": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "ain_get",
+        "params": {
+          "protoVer": "0.9.0",
+          "type": "GET_VALUE",
+          "ref": "/accounts/0xAAAf6f50A0304F12119D218b94bea8082642515B"
+        }
       }
     }
   ]
