@@ -1,5 +1,6 @@
 const TpsTest = require('./test_type/tps');
 const CrossShardTest = require('./test_type/cross_shard');
+const QpsTest = require('./test_type/qps');
 const { TestType } = require('./constants');
 const fs = require('fs');
 const moment = require('moment-timezone');
@@ -31,6 +32,8 @@ async function startTest(benchmarkConfig, outputDirName) {
     startFunc = TpsTest.start;
   } else if (testType === TestType.CROSS_SHARD) {
     startFunc = CrossShardTest.start;
+  } else if (testType === TestType.QPS) {
+    startFunc = QpsTest.start;
   } else {
     console.log(`testType config is missing. Proceed with default test type (TPS)`);
     startFunc = TpsTest.start;

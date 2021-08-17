@@ -2,6 +2,7 @@ const JobType = Object.freeze({
   SEND: 'SEND',
   CONFIRM: 'CONFIRM',
   CROSS_SHARD_TEST: 'CROSS_SHARD_TEST',
+  CALL: 'CALL',
 });
 
 const JobStatus = Object.freeze({
@@ -13,6 +14,7 @@ const JobStatus = Object.freeze({
 });
 
 const TestType = Object.freeze({
+  QPS: 'QPS',
   TPS: 'TPS',
   CROSS_SHARD: 'CROSS_SHARD',
 });

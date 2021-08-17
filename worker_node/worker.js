@@ -2,6 +2,7 @@ const { JobStatus, JobType } = require('../constants');
 const SendJob = require('./job/send');
 const ConfirmJob = require('./job/confirm');
 const CrossShardTestJob = require('./job/cross_shard_test');
+const CallJob = require('./job/call');
 
 class Worker {
   #jobList; // [{ status, input, output }]
@@ -72,8 +73,10 @@ class Worker {
       jobInstance = new ConfirmJob(jobInput.config);
     } else if (jobInput.type === JobType.CROSS_SHARD_TEST) {
       jobInstance = new CrossShardTestJob(jobInput.config);
+    } else if (jobInput.type === JobType.CALL) {
+      jobInstance = new CallJob(jobInput.config);
     } else {
-      throw Error(`Unknown job type (${jobInput.type}`);
+      throw Error(`Unknown job type (${jobInput.type})`);
     }
     return jobInstance;
   }
