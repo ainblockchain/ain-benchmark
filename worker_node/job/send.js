@@ -5,7 +5,7 @@ const { BLOCKCHAIN_PROTOCOL_VERSION } = require('@ainblockchain/ain-js/lib/const
 const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 const request = require('../../util/request');
 const BLOCK_TIME = process.env.BLOCK_TIME || 3000;
-const REQUEST_THRESHOLD = process.env.REQUEST_THRESHOLD || 200; // When the threshold is reached, request is temporarily stopped
+const REQUEST_THRESHOLD = process.env.REQUEST_THRESHOLD || 400; // When the threshold is reached, request is temporarily stopped
 const RETRY_THRESHOLD = 3;
 
 class Send extends Base {
@@ -106,7 +106,7 @@ class Send extends Base {
         throw Error(`Error while write manage app config (${JSON.stringify(manageAppTxResult)})`);
       }
     }
-    await delay(3 * BLOCK_TIME);
+    await delay(7 * BLOCK_TIME);
 
     const path = this.config.transactionOperation.ref;
     // TODO: update ain-js to support is_global and use ain-js here
@@ -120,7 +120,6 @@ class Send extends Base {
           ref: path,
           value: null,
           address: this.config.ainAddress,
-          is_global: true,
           protoVer: BLOCKCHAIN_PROTOCOL_VERSION,
         },
         jsonrpc: '2.0',
@@ -181,7 +180,7 @@ class Send extends Base {
               }
               this.#ain.sendTransaction(tx).then(result => {
                 if (!result || !result.hasOwnProperty('tx_hash')) {
-                  throw Error(`Wrong format`);
+                  throw Error(`Wrong format (${JSON.stringify(result)}`);
                 } else if (!result.result) {
                   throw Error('result !== true');
                 }
@@ -189,6 +188,7 @@ class Send extends Base {
                 resolve(result.txHash);
               }).catch(err => {
                 this.output.statistics.error++;
+                console.log(err);
                 resolve(err);
               });
             }, 0, currTimestamp + i);
