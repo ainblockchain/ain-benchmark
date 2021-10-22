@@ -8,6 +8,13 @@ const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 const debugMode = !!process.env.DEBUG;
 const startTime = new Date().getTime();
 
+function delayForMonitoring(benchmarkConfig, time) {
+  const monitoringConfig = benchmarkConfig.monitoring;
+  if (!monitoringConfig || !monitoringConfig.enable) {
+    return delay(time);
+  }
+}
+
 function initOutputDirectory(outputDirName) {
   if (!fs.existsSync(outputDirName)) {
     fs.mkdirSync(outputDirName);
