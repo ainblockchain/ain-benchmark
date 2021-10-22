@@ -200,7 +200,7 @@ function getNumberOfShards(testList) {
   }
   const pathTable = {};
   for (const test of testList) {
-    const path = test.config.transactionOperation.ref;
+    const path = test.config.ainUrl;
     pathTable[path] = true;
   }
   return Object.keys(pathTable).length;
