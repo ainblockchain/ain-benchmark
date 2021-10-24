@@ -1,6 +1,8 @@
+const _ = require('lodash');
 const Base = require('./base');
 const Ain = require('@ainblockchain/ain-js').default;
 const TX_TIMEOUT_MS = process.env.TX_TIMEOUT_MS || 3000;
+const request = require('../../util/request');
 
 class Confirm extends Base {
   static configProps = [
@@ -71,15 +73,34 @@ class Confirm extends Base {
     return (timeoutTxCount / totalTxCount * 100).toFixed(5) + '%';
   }
 
+  async getFinalizedAtInfoByNumber(number) {
+    const response = await request({
+      method: 'get',
+      baseURL: this.config.ainUrl,
+      url: '/get_block_info_by_number',
+      params: {
+        number: number,
+      }
+    });
+    const finalizedAt = _.get(response, 'data.result.finalized_at');
+    if (!finalizedAt) {
+      throw Error(`Can't get block info (number: ${number})`);
+    }
+    return finalizedAt;
+  }
+
   async process() {
     const startBlockNumber = this.config.startBlockNumber;
     const finishBlockNumber = this.config.finishBlockNumber;
     const transactionList = await this.requestTransactionList(startBlockNumber, finishBlockNumber);
     const blockDuration = await this.calculateDuration(startBlockNumber, finishBlockNumber);
-    const tps = this.output.statistics.transactionCount / (blockDuration / 1000);
+    const finishBlockFinalizedAt = await this.getFinalizedAtInfoByNumber(finishBlockNumber);
+    const sendDuration = finishBlockFinalizedAt - this.config.sendStartTime;
+    const tps = this.output.statistics.transactionCount / (sendDuration / 1000);
 
     this.output.statistics.tps = tps;
     this.output.statistics.blockDuration = blockDuration;
+    this.output.statistics.sendDuration = sendDuration;
     this.output.statistics.startBlockNumber = startBlockNumber;
     this.output.statistics.finishBlockNumber = finishBlockNumber;
     this.output.transactionList = transactionList;
