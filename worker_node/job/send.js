@@ -210,7 +210,7 @@ class Send extends Base {
 
     const sendStartTime = Date.now();
     const sendResultList = await this.sendTxs();
-    await delay(BLOCK_TIME * 3);
+    await delay(BLOCK_TIME * 6);
     const finishBlock = await this.getRecentBlockInformation(['timestamp', 'number']);
 
     this.output.sendStartTime = sendStartTime;
