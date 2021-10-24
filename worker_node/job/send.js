@@ -208,10 +208,12 @@ class Send extends Base {
       throw Error(`Genesis block was not created! (current block number: ${startBlock.number})`);
     }
 
+    const sendStartTime = Date.now();
     const sendResultList = await this.sendTxs();
-    await delay(BLOCK_TIME * 3);
+    await delay(BLOCK_TIME * 6);
     const finishBlock = await this.getRecentBlockInformation(['timestamp', 'number']);
 
+    this.output.sendStartTime = sendStartTime;
     this.output.startBlockNumber = startBlock.number;
     this.output.finishBlockNumber = finishBlock.number;
     this.output.statistics.blockDuration = finishBlock.timestamp - startBlock.timestamp;

@@ -170,6 +170,7 @@ function addConfirmJob(testList) {
 
       job.input.config = {
         ainUrl: test.config.ainUrl,
+        sendStartTime: test.jobList[prevJobIndex].output.sendStartTime,
         startBlockNumber: test.jobList[prevJobIndex].output.startBlockNumber,
         finishBlockNumber: test.jobList[prevJobIndex].output.finishBlockNumber,
         transactionOperationRef: test.jobList[prevJobIndex].input.config.transactionOperation.ref,
