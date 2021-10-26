@@ -61,6 +61,8 @@ class Call extends Base {
     const callResultList = await this.startCall();
     const finishCallTime = Date.now();
     const qps = this.output.statistics.success / ((finishCallTime - startCallTime) / 1000);
+    this.output.startCallTime = startCallTime;
+    this.output.finishCallTime = finishCallTime;
     this.output.callResultList = callResultList;
     this.output.statistics.qps = qps;
     return this.output;
