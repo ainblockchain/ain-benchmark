@@ -106,7 +106,7 @@ class Send extends Base {
         throw Error(`Error while write manage app config (${JSON.stringify(manageAppTxResult)})`);
       }
     }
-    await delay(7 * BLOCK_TIME);
+    await delay(12 * BLOCK_TIME);
 
     const path = this.config.transactionOperation.ref;
     // TODO: update ain-js to support is_global and use ain-js here
@@ -210,7 +210,7 @@ class Send extends Base {
 
     const sendStartTime = Date.now();
     const sendResultList = await this.sendTxs();
-    await delay(BLOCK_TIME * 6);
+    await delay(BLOCK_TIME * 9);
     const finishBlock = await this.getRecentBlockInformation(['timestamp', 'number']);
 
     this.output.sendStartTime = sendStartTime;
