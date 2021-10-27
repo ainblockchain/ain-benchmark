@@ -100,6 +100,8 @@ class Confirm extends Base {
 
     this.output.statistics.tps = tps;
     this.output.statistics.blockDuration = blockDuration;
+    this.output.statistics.sendStartTime = this.config.sendStartTime;
+    this.output.statistics.finishBlockFinalizedAt = finishBlockFinalizedAt;
     this.output.statistics.sendDuration = sendDuration;
     this.output.statistics.startBlockNumber = startBlockNumber;
     this.output.statistics.finishBlockNumber = finishBlockNumber;
