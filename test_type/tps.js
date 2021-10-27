@@ -255,7 +255,7 @@ function assembleTestResult(testList) {
       totalTxCount += confirmJob.output.statistics.transactionCount;
       totalTimeoutTxCount += confirmJob.output.statistics.timeoutTransactionCount;
       console.log(`TPS: ${Number(tps).toFixed(5)} ` +
-          ` <= ${confirmJob.output.statistics.transactionCount} txs ` +
+          `(${confirmJob.output.statistics.transactionCount} txs ` +
           `/ ${confirmJob.output.statistics.sendDuration / 1000} secs)`);
     }
     console.log();
