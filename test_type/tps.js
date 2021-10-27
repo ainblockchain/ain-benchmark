@@ -30,6 +30,7 @@ function makeTestList(benchmarkConfig) {
         duration: benchmarkConfig.duration,
         numberOfTransactions: benchmarkConfig.numberOfTransactions,
         saveTxs: benchmarkConfig.saveTxs || false,
+        saveBlocks: benchmarkConfig.saveBlocks || false,
         monitoring: {
           ...benchmarkConfig.monitoring,
         },
@@ -176,6 +177,7 @@ function addConfirmJob(testList) {
         transactionOperationRef: test.jobList[prevJobIndex].input.config.transactionOperation.ref,
         sendSuccess: test.jobList[prevJobIndex].output.statistics.success,
         saveTxs: test.config.saveTxs,
+        saveBlocks: test.config.saveBlocks,
       };
     } catch (err) {
       job.status = JobStatus.PASS;
@@ -304,14 +306,22 @@ async function writeTestResult(testResult, testList, outputDirName) {
     if (confirmJob.status !== JobStatus.SUCCESS) {
       continue;
     }
-    if (!test.config.saveTxs) {
-      continue;
-    }
     const testDir = outputDirName + `/s${(i + 1).toString().padStart(2, '0')}`; // s01, s02 ...
-    const transactionsFile = testDir + `/transactions.jsonl`;
-    fs.mkdirSync(testDir);
-    await writeJsonlFile(transactionsFile, confirmJob.output.transactionList);
-    confirmJob.output.transactionList = undefined;
+    if (test.config.saveTxs || test.config.saveBlocks) {
+      fs.mkdirSync(testDir);
+      if (test.config.saveTxs) {
+        const transactionsFile = testDir + `/transactions.jsonl`;
+        await writeJsonlFile(transactionsFile, confirmJob.output.transactionList);
+        confirmJob.output.transactionList = undefined;
+      }
+
+      if (test.config.saveBlocks) {
+        const blocksFile = testDir + `/blocks.jsonl`;
+        await writeJsonlFile(blocksFile, confirmJob.output.blockList);
+        confirmJob.output.blockList = undefined;
+      }
+    }
+
     await delay(1000);
   }
   console.log(`- Save result in '${outputDirName}'`);
