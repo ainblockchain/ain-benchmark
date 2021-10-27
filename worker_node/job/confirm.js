@@ -26,38 +26,49 @@ class Confirm extends Base {
     this.#ain.provider.setDefaultTimeoutMs(60 * 1000);
   }
 
-  async requestTransactionList(from, to) {
+  async requestTransactionListAndBlockList(from, to) {
     const transactionList = [];
+    const blockList = [];
     let timeoutTxCount = 0;
     let totalConfirmedTime = 0;
 
     for (let number = from; number <= to; number++) {
       const block = await this.#ain.getBlock(number, true);
       this.output.statistics.transactionCount += block.transactions.length;
-      if (!this.config.saveTxs) {
-        continue;
+      if (this.config.saveTxs) {
+        transactionList.push(...block.transactions.reduce((acc, tx) => {
+          const confirmedTime = block.timestamp - tx.timestamp;
+          if (confirmedTime > TX_TIMEOUT_MS) {
+            timeoutTxCount++;
+          }
+          totalConfirmedTime += confirmedTime;
+          acc.push({
+            blockNumber: number,
+            hash: tx.hash,
+            nonce: tx.nonce,
+            timestamp: tx.timestamp,
+            operation: tx.operation,
+          });
+          return acc;
+        }, []));
       }
-      transactionList.push(...block.transactions.reduce((acc, tx) => {
-        const confirmedTime = block.timestamp - tx.timestamp;
-        if (confirmedTime > TX_TIMEOUT_MS) {
-          timeoutTxCount++;
-        }
-        totalConfirmedTime += confirmedTime;
-        acc.push({
-          blockNumber: number,
-          hash: tx.hash,
-          nonce: tx.nonce,
-          timestamp: tx.timestamp,
-          operation: tx.operation,
-        });
-        return acc;
-      }, []));
+
+      if (this.config.saveBlocks) {
+        blockList.push({
+          number: number,
+          hash: block.hash,
+          size: block.size,
+        })
+      }
     }
     this.output.statistics.confirmedTimeAverage = transactionList.length ?
         totalConfirmedTime / transactionList.length : 0;
     this.output.statistics.lossRate = this.calculateLossRate(timeoutTxCount, this.output.statistics.transactionCount);
     this.output.statistics.timeoutTransactionCount = timeoutTxCount;
-    return transactionList;
+    return {
+      transactionList,
+      blockList,
+    };
   }
 
   async calculateDuration(from, to) {
@@ -92,7 +103,10 @@ class Confirm extends Base {
   async process() {
     const startBlockNumber = this.config.startBlockNumber;
     const finishBlockNumber = this.config.finishBlockNumber;
-    const transactionList = await this.requestTransactionList(startBlockNumber, finishBlockNumber);
+    const {
+      transactionList,
+      blockList,
+    } = await this.requestTransactionListAndBlockList(startBlockNumber, finishBlockNumber);
     const blockDuration = await this.calculateDuration(startBlockNumber, finishBlockNumber);
     const finishBlockFinalizedAt = await this.getFinalizedAtInfoByNumber(finishBlockNumber);
     const sendDuration = finishBlockFinalizedAt - this.config.sendStartTime;
@@ -106,6 +120,7 @@ class Confirm extends Base {
     this.output.statistics.startBlockNumber = startBlockNumber;
     this.output.statistics.finishBlockNumber = finishBlockNumber;
     this.output.transactionList = transactionList;
+    this.output.blockList = blockList;
 
     return this.output;
   }
