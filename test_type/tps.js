@@ -222,7 +222,8 @@ function printJobResult(testList, jobIndex) {
       } else if (job.input.type === JobType.CONFIRM) {
         additionalInfo = `, tps: ${job.output.statistics.tps}` +
             `, lossRate: ${job.output.statistics.lossRate}` +
-            `, blockDuration: ${job.output.statistics.blockDuration}`;
+            `, sendStartTime: ${job.output.statistics.sendStartTime}` +
+            `, finishBlockFinalizedAt: ${job.output.statistics.finishBlockFinalizedAt}`;
       }
     } else if (job.status === JobStatus.FAIL) {
       additionalInfo = `, error message: ${job.output.message})`;
@@ -255,7 +256,7 @@ function assembleTestResult(testList) {
       totalTimeoutTxCount += confirmJob.output.statistics.timeoutTransactionCount;
       console.log(`TPS: ${Number(tps).toFixed(5)} ` +
           `(${confirmJob.output.statistics.transactionCount} txs ` +
-          `/ ${confirmJob.output.statistics.blockDuration / 1000} secs)`);
+          `/ ${confirmJob.output.statistics.sendDuration / 1000} secs)`);
     }
     console.log();
   }
