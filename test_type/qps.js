@@ -138,7 +138,8 @@ function assembleTestResult(testList) {
     const callJob = test.jobList[0];
     const ainUrl = test.config.ainUrl;
 
-    console.log(`[Shard ${i + 1}] endpoint: ${ainUrl}, method: ${test.config.method}, body: ${JSON.stringify(test.config.body)}`);
+    console.log(`[Shard ${i + 1}] endpoint: ${ainUrl}, method: ${test.config.method}, body: ${JSON.stringify(test.config.body)}, ` +
+        `startCallTime: ${callJob.output.statistics.startCallTime}, finishCallTime: ${callJob.output.statistics.finishCallTime}`);
     if (callJob.status !== JobStatus.SUCCESS) {
       console.log(`Error: ${callJob.output.message} [${ainUrl}]`);
     } else {
@@ -146,7 +147,7 @@ function assembleTestResult(testList) {
       totalQps += qps;
       totalSuccess += callJob.output.statistics.success;
       totalError += callJob.output.statistics.error;
-      console.log(`QPS: ${Number(qps).toFixed(5)}`);
+      console.log(`QPS: ${Number(qps).toFixed(5)} (${callJob.output.statistics.success} / ${callJob.output.statistics.totalCallTime})`);
     }
     console.log();
   }
