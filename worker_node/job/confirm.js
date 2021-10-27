@@ -20,6 +20,7 @@ class Confirm extends Base {
         tps: null,
         lossRate: null,
         transactionCount: 0,
+        totalBlockSize: 0,
       },
     };
     this.#ain = new Ain(this.config.ainUrl);
@@ -35,6 +36,7 @@ class Confirm extends Base {
     for (let number = from; number <= to; number++) {
       const block = await this.#ain.getBlock(number, true);
       this.output.statistics.transactionCount += block.transactions.length;
+      this.output.statistics.totalBlockSize += block.size;
       if (this.config.saveTxs) {
         transactionList.push(...block.transactions.reduce((acc, tx) => {
           const confirmedTime = block.timestamp - tx.timestamp;
@@ -65,6 +67,7 @@ class Confirm extends Base {
         totalConfirmedTime / transactionList.length : 0;
     this.output.statistics.lossRate = this.calculateLossRate(timeoutTxCount, this.output.statistics.transactionCount);
     this.output.statistics.timeoutTransactionCount = timeoutTxCount;
+    this.output.statistics.averageBlockSize = this.output.statistics.totalBlockSize / (to - from + 1);
     return {
       transactionList,
       blockList,
