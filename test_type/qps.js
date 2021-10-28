@@ -147,7 +147,7 @@ function assembleTestResult(testList) {
       totalQps += qps;
       totalSuccess += callJob.output.statistics.success;
       totalError += callJob.output.statistics.error;
-      console.log(`QPS: ${Number(qps).toFixed(5)} (${callJob.output.statistics.success} / ${callJob.output.statistics.totalCallTime})`);
+      console.log(`QPS: ${Number(qps).toFixed(5)} (${callJob.output.statistics.success} calls / ${callJob.output.statistics.totalCallTime / 1000} secs)`);
     }
     console.log();
   }
