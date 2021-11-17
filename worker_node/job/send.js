@@ -7,6 +7,7 @@ const request = require('../../util/request');
 const BLOCK_TIME = process.env.BLOCK_TIME || 3000;
 const REQUEST_THRESHOLD = process.env.REQUEST_THRESHOLD || 400; // When the threshold is reached, request is temporarily stopped
 const RETRY_THRESHOLD = 3;
+const NUM_OF_HEALTH_CHECKS = 10;
 
 class Send extends Base {
   static configProps = [
@@ -57,6 +58,20 @@ class Send extends Base {
         }
         retryCount++;
         await delay(2 * BLOCK_TIME);
+      }
+    }
+  }
+
+  async checkHealth() {
+    for (let i = 0; i < NUM_OF_HEALTH_CHECKS; i++) {
+      const res = await request({
+        method: 'get',
+        baseURL: this.config.ainUrl,
+        url: '/health_check',
+      });
+
+      if (res.data !== 'true') {
+        throw Error(`Failed to health check (${i + 1}/${NUM_OF_HEALTH_CHECKS}, res: ${JSON.stringify(res)}`);
       }
     }
   }
@@ -201,6 +216,7 @@ class Send extends Base {
   }
 
   async process() {
+    await this.checkHealth();
     await this.initPermission();
 
     const startBlock = await this.getRecentBlockInformation(['timestamp', 'number']);
