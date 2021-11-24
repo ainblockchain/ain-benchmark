@@ -70,7 +70,7 @@ class Send extends Base {
         url: '/health_check',
       });
 
-      if (res.data === 'true') {
+      if (res.data === 'true' || res.data === true) {
         return;
       }
       await delay(BLOCK_TIME);
