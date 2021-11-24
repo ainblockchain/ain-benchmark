@@ -4,6 +4,7 @@ const Ain = require('@ainblockchain/ain-js').default;
 const { BLOCKCHAIN_PROTOCOL_VERSION } = require('@ainblockchain/ain-js/lib/constants');
 const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 const request = require('../../util/request');
+const CommonUtil = require('../../util/common');
 const BLOCK_TIME = process.env.BLOCK_TIME || 3000;
 const REQUEST_THRESHOLD = process.env.REQUEST_THRESHOLD || 400; // When the threshold is reached, request is temporarily stopped
 const RETRY_THRESHOLD = 3;
@@ -70,7 +71,7 @@ class Send extends Base {
         url: '/health_check',
       });
 
-      if (res.data === 'true' || res.data === true) {
+      if (CommonUtil.isBool(res.data)) {
         return;
       }
       await delay(BLOCK_TIME);
