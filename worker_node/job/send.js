@@ -229,10 +229,12 @@ class Send extends Base {
 
     const sendStartTime = Date.now();
     const sendResultList = await this.sendTxs();
+    const sendFinishTime = Date.now();
     await delay(BLOCK_TIME * 9);
     const finishBlock = await this.getLastBlockInformation(['timestamp', 'number']);
 
     this.output.sendStartTime = sendStartTime;
+    this.output.sendFinishTime = sendFinishTime;
     this.output.startBlockNumber = startBlock.number;
     this.output.finishBlockNumber = finishBlock.number;
     this.output.statistics.blockDuration = finishBlock.timestamp - startBlock.timestamp;
