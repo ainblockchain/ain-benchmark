@@ -42,11 +42,11 @@ class Send extends Base {
 
   }
 
-  async getRecentBlockInformation(keyList) {
+  async getLastBlockInformation(keyList) {
     let retryCount = 0;
     while (true) {
       try {
-        const information = await this.#ain.provider.send('ain_getRecentBlock');
+        const information = await this.#ain.provider.send('ain_getLastBlock');
         return keyList.reduce((acc, cur) => {
           acc[cur] = information[cur];
           return acc;
@@ -222,7 +222,7 @@ class Send extends Base {
     await this.checkHealth();
     await this.initPermission();
 
-    const startBlock = await this.getRecentBlockInformation(['timestamp', 'number']);
+    const startBlock = await this.getLastBlockInformation(['timestamp', 'number']);
     if (!startBlock.number) {
       throw Error(`Genesis block was not created! (current block number: ${startBlock.number})`);
     }
@@ -230,7 +230,7 @@ class Send extends Base {
     const sendStartTime = Date.now();
     const sendResultList = await this.sendTxs();
     await delay(BLOCK_TIME * 9);
-    const finishBlock = await this.getRecentBlockInformation(['timestamp', 'number']);
+    const finishBlock = await this.getLastBlockInformation(['timestamp', 'number']);
 
     this.output.sendStartTime = sendStartTime;
     this.output.startBlockNumber = startBlock.number;
