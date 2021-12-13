@@ -149,12 +149,13 @@ class Send extends Base {
     }
   }
 
-  makeBaseTransaction() {
+  makeBaseTransaction(gasPrice) {
     return {
       operation: {
         ...this.config.transactionOperation,
       },
       nonce: -1,
+      gas_price: gasPrice,
     };
   }
 
@@ -168,7 +169,8 @@ class Send extends Base {
     }
 
     // const baseTimestamp = this.config.timestamp;
-    const baseTx = this.makeBaseTransaction();
+    const gasPrice = this.config.gasPrice || 0;
+    const baseTx = this.makeBaseTransaction(gasPrice);
     const timestampSet = new Set();
     const targetTestEndTime = Date.now() + (this.config.duration * 1000); // MS
 
