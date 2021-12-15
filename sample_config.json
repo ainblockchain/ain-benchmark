@@ -15,7 +15,8 @@
         "is_global": true
       },
       "consecutivePath": true,
-      "consecutiveValue": true
+      "consecutiveValue": true,
+      "gasPrice": 1
     }
   ]
 }
