@@ -161,9 +161,10 @@ class Send extends Base {
 
   async sendTxs() {
     const sendTxPromiseList = [];
+    const randomAddressPath = this.config.randomAddressPath === true;
     const consecutivePath = this.config.consecutivePath === true;
     const consecutiveValue = this.config.consecutiveValue === true;
-
+    const extraPath = this.config.extraPath || null;
     if (!this.config.timestamp) {
       this.config.timestamp = Date.now();
     }
@@ -191,8 +192,14 @@ class Send extends Base {
           new Promise((resolve, reject) => {
             setTimeout((timestamp) => {
               tx.timestamp = timestamp;
+              if (randomAddressPath) {
+                tx.operation.ref = `${tx.operation.ref}/${Ain.utils.createAccount().address}`;
+              }
               if (consecutivePath) {
                 tx.operation.ref = `${tx.operation.ref}/${i}`;
+              }
+              if (extraPath) {
+                tx.operation.ref = `${tx.operation.ref}/${extraPath}`;
               }
               if (consecutiveValue) {
                 tx.operation.value = i;
@@ -221,7 +228,9 @@ class Send extends Base {
 
   async process() {
     await this.checkHealth();
-    await this.initPermission();
+    if (this.config.transactionOperation.ref.includes('apps')) {
+      await this.initPermission();
+    }
 
     const startBlock = await this.getLastBlockInformation(['timestamp', 'number']);
     if (!startBlock.number) {
