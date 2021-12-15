@@ -155,6 +155,7 @@ class Send extends Base {
         ...this.config.transactionOperation,
       },
       nonce: -1,
+      gas_price: this.config.gasPrice || 0,
     };
   }
 
