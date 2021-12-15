@@ -164,7 +164,7 @@ class Send extends Base {
     const randomAddressPath = this.config.randomAddressPath === true;
     const consecutivePath = this.config.consecutivePath === true;
     const consecutiveValue = this.config.consecutiveValue === true;
-    const extraPath = this.config.extraPath || null;
+    const pathSuffix = this.config.pathSuffix || null;
     if (!this.config.timestamp) {
       this.config.timestamp = Date.now();
     }
@@ -198,8 +198,8 @@ class Send extends Base {
               if (consecutivePath) {
                 tx.operation.ref = `${tx.operation.ref}/${i}`;
               }
-              if (extraPath) {
-                tx.operation.ref = `${tx.operation.ref}/${extraPath}`;
+              if (pathSuffix) {
+                tx.operation.ref = `${tx.operation.ref}/${pathSuffix}`;
               }
               if (consecutiveValue) {
                 tx.operation.value = i;

@@ -15,7 +15,7 @@
       },
       "randomAddressPath": true,
       "consecutivePath": true,
-      "extraPath": "value",
+      "pathSuffix": "value",
       "gasPrice": 1
     }
   ]
