@@ -95,7 +95,8 @@ class Send extends Base {
           ref: stakingPath,
           value: 1,
         },
-        nonce: -1
+        nonce: -1,
+        gas_price: this.config.gasPrice || 0,
       };
       const stakingTxResult = await this.#ain.sendTransaction(stakingTx);
       if (_.get(stakingTxResult, 'result.code') !== 0) {
@@ -118,6 +119,7 @@ class Send extends Base {
           },
         },
         nonce: -1,
+        gas_price: this.config.gasPrice || 0,
       };
       const manageAppTxResult = await this.#ain.sendTransaction(manageAppCreateTx);
       if (_.get(manageAppTxResult, 'result.code') !== 0) {
