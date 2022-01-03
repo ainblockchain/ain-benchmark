@@ -16,7 +16,7 @@
       },
       "consecutivePath": true,
       "consecutiveValue": true,
-      "gasPrice": 1
+      "gasPrice": 500
     }
   ]
 }
