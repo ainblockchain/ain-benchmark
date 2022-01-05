@@ -166,12 +166,13 @@ class Send extends Base {
     const randomAddressPath = this.config.randomAddressPath === true;
     const consecutivePath = this.config.consecutivePath === true;
     const consecutiveValue = this.config.consecutiveValue === true;
+    const randomSuffixValue = this.config.randomSuffixValue === true;
     const pathSuffix = this.config.pathSuffix || null;
     if (!this.config.timestamp) {
       this.config.timestamp = Date.now();
     }
 
-    // const baseTimestamp = this.config.timestamp;
+    const startTimestamp = Date.now();
     const baseTx = this.makeBaseTransaction();
     const timestampSet = new Set();
     const targetTestEndTime = Date.now() + (this.config.duration * 1000); // MS
@@ -205,6 +206,8 @@ class Send extends Base {
               }
               if (consecutiveValue) {
                 tx.operation.value = i;
+              } else if (randomSuffixValue) {
+                tx.operation.value = `${tx.operation.value}:${startTimestamp + i}`;
               }
               this.#ain.sendTransaction(tx).then(result => {
                 if (!result || !result.hasOwnProperty('tx_hash')) {
