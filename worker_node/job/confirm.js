@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const Base = require('./base');
 const Ain = require('@ainblockchain/ain-js').default;
-const TX_TIMEOUT_MS = process.env.TX_TIMEOUT_MS || 3000;
+const TX_TIMEOUT_MS = process.env.TX_TIMEOUT_MS || 20000;
 const request = require('../../util/request');
 
 class Confirm extends Base {
