@@ -5,7 +5,7 @@ const { BLOCKCHAIN_PROTOCOL_VERSION } = require('@ainblockchain/ain-js/lib/const
 const delay = (time) => new Promise(resolve => setTimeout(resolve, time));
 const request = require('../../util/request');
 const CommonUtil = require('../../util/common');
-const BLOCK_TIME = process.env.BLOCK_TIME || 3000;
+const BLOCK_TIME = process.env.BLOCK_TIME || 20000;
 const REQUEST_THRESHOLD = process.env.REQUEST_THRESHOLD || 400; // When the threshold is reached, request is temporarily stopped
 const RETRY_THRESHOLD = 3;
 const MAX_NUM_OF_HEALTH_CHECKS = 10;
@@ -126,7 +126,7 @@ class Send extends Base {
         throw Error(`Error while write manage app config (${JSON.stringify(manageAppTxResult)})`);
       }
     }
-    await delay(12 * BLOCK_TIME);
+    await delay(2 * BLOCK_TIME);
 
     const path = this.config.transactionOperation.ref;
     // TODO: update ain-js to support is_global and use ain-js here
@@ -175,7 +175,7 @@ class Send extends Base {
     const startTimestamp = Date.now();
     const baseTx = this.makeBaseTransaction();
     const timestampSet = new Set();
-    const targetTestEndTime = Date.now() + (this.config.duration * 1000); // MS
+    const targetTestEndTime = Date.now() + (this.config.duration * 1000) - (BLOCK_TIME); // MS
 
     for (let i = 0; i < this.config.numberOfTransactions; i++) {
       const delayTime = (targetTestEndTime - Date.now()) / (this.config.numberOfTransactions - i);
@@ -216,7 +216,7 @@ class Send extends Base {
                   throw Error('result !== true');
                 }
                 this.output.statistics.success++;
-                resolve(result.txHash);
+                resolve(result.tx_hash);
               }).catch(err => {
                 this.output.statistics.error++;
                 console.log(err);
@@ -227,8 +227,23 @@ class Send extends Base {
       );
     }
 
-    const sendTxResultList = await Promise.all(sendTxPromiseList);
-    return sendTxResultList;
+    const sendResultList = await Promise.all(sendTxPromiseList);
+    return sendResultList.filter(result => {
+      return typeof result === 'string'; // NOTE(cshcomcom): Return only transaction hashes
+    });
+  }
+
+  async getBlockByTxHash(txHash) {
+    const txInfo = await this.#ain.getTransaction(txHash);
+    if (!txInfo.number) {
+      throw Error(`Can't find number from txInfo (txInfo: ${JSON.stringify(txInfo)})`);
+    }
+    const block = await this.#ain.getBlock(txInfo.number);
+    if (!block.hash) {
+      throw Error(`Error while getBlockByTxHash (txHash: ${txHash}, ` +
+          `txInfo: ${JSON.stringify(txInfo)}, block: ${JSON.stringify(block)})`);
+    }
+    return block;
   }
 
   async process() {
@@ -237,16 +252,17 @@ class Send extends Base {
       await this.initPermission();
     }
 
-    const startBlock = await this.getLastBlockInformation(['timestamp', 'number']);
-    if (!startBlock.number) {
-      throw Error(`Genesis block was not created! (current block number: ${startBlock.number})`);
-    }
-
     const sendStartTime = Date.now();
-    const sendResultList = await this.sendTxs();
+    const sendTxHashList = await this.sendTxs();
     const sendFinishTime = Date.now();
-    await delay(BLOCK_TIME * 9);
-    const finishBlock = await this.getLastBlockInformation(['timestamp', 'number']);
+    await delay(BLOCK_TIME * 10);
+
+    const firstTxHash = sendTxHashList[0];
+    const startBlock = await this.getBlockByTxHash(firstTxHash);
+    const lastTxHash = sendTxHashList[sendTxHashList.length - 1];
+    const finishBlock = await this.getBlockByTxHash(lastTxHash);
+
+    console.log(`firstTxHash: ${firstTxHash}, lastTxHash: ${lastTxHash}`);
 
     this.output.sendStartTime = sendStartTime;
     this.output.sendFinishTime = sendFinishTime;
