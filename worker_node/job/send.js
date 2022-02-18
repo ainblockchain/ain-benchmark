@@ -239,6 +239,9 @@ class Send extends Base {
       throw Error(`Can't find number from txInfo (txInfo: ${JSON.stringify(txInfo)})`);
     }
     const block = await this.#ain.getBlock(txInfo.number);
+    if (!block) {
+      throw Error(`Can't get block from number (number: ${txInfo.number})`);
+    }
     if (!block.hash) {
       throw Error(`Error while getBlockByTxHash (txHash: ${txHash}, ` +
           `txInfo: ${JSON.stringify(txInfo)}, block: ${JSON.stringify(block)})`);
