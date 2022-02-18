@@ -126,7 +126,7 @@ class Send extends Base {
         throw Error(`Error while write manage app config (${JSON.stringify(manageAppTxResult)})`);
       }
     }
-    await delay(2 * BLOCK_TIME);
+    await delay(5 * BLOCK_TIME);
 
     const path = this.config.transactionOperation.ref;
     // TODO: update ain-js to support is_global and use ain-js here
