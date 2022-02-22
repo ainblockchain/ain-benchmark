@@ -263,11 +263,12 @@ class Send extends Base {
     const sendFinishTime = Date.now();
     await delay(BLOCK_TIME * 10);
 
+    const firstTxHash = sendTxHashList[0];
+    const lastTxHash = sendTxHashList[sendTxHashList.length - 1];
     console.log(`statistics: ${JSON.stringify(this.output.statistics, null, 2)})`);
     console.log(`firstTxHash: ${firstTxHash}, lastTxHash: ${lastTxHash}`);
-    const firstTxHash = sendTxHashList[0];
+
     const startBlock = await this.getBlockByTxHash(firstTxHash);
-    const lastTxHash = sendTxHashList[sendTxHashList.length - 1];
     const finishBlock = await this.getBlockByTxHash(lastTxHash);
 
     this.output.sendStartTime = sendStartTime;
