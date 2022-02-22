@@ -212,8 +212,10 @@ class Send extends Base {
               this.#ain.sendTransaction(tx).then(result => {
                 if (!result || !result.hasOwnProperty('tx_hash')) {
                   throw Error(`Wrong format (${JSON.stringify(result)}`);
-                } else if (!result.result) {
-                  throw Error('result !== true');
+                }
+                const code = _.get(result, 'result.code', -1);
+                if (code !== 0) {
+                  throw Error(`Result code !== 0 (result: ${JSON.stringify(result)})`);
                 }
                 this.output.statistics.success++;
                 resolve(result.tx_hash);
