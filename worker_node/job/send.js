@@ -235,6 +235,9 @@ class Send extends Base {
 
   async getBlockByTxHash(txHash) {
     const txInfo = await this.#ain.getTransaction(txHash);
+    if (!txInfo) {
+      throw Error(`Can't get txInfo from txHash (txHash: ${txHash})`);
+    }
     if (!txInfo.number) {
       throw Error(`Can't find number from txInfo (txInfo: ${JSON.stringify(txInfo)})`);
     }
@@ -260,12 +263,12 @@ class Send extends Base {
     const sendFinishTime = Date.now();
     await delay(BLOCK_TIME * 10);
 
+    console.log(`statistics: ${JSON.stringify(this.output.statistics, null, 2)})`);
+    console.log(`firstTxHash: ${firstTxHash}, lastTxHash: ${lastTxHash}`);
     const firstTxHash = sendTxHashList[0];
     const startBlock = await this.getBlockByTxHash(firstTxHash);
     const lastTxHash = sendTxHashList[sendTxHashList.length - 1];
     const finishBlock = await this.getBlockByTxHash(lastTxHash);
-
-    console.log(`firstTxHash: ${firstTxHash}, lastTxHash: ${lastTxHash}`);
 
     this.output.sendStartTime = sendStartTime;
     this.output.sendFinishTime = sendFinishTime;
