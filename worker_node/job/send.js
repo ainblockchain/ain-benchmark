@@ -9,6 +9,7 @@ const BLOCK_TIME = process.env.BLOCK_TIME || 20000;
 const REQUEST_THRESHOLD = process.env.REQUEST_THRESHOLD || 400; // When the threshold is reached, request is temporarily stopped
 const RETRY_THRESHOLD = 3;
 const MAX_NUM_OF_HEALTH_CHECKS = 10;
+const SEND_TX_TIMEOUT = process.env.SEND_TX_TIMEOUT || 60000;
 
 class Send extends Base {
   static configProps = [
@@ -38,7 +39,7 @@ class Send extends Base {
     this.#ain = new Ain(this.config.ainUrl);
     this.#ain.wallet.add(this.config.ainPrivateKey);
     this.#ain.wallet.setDefaultAccount(this.config.ainAddress);
-    this.#ain.provider.setDefaultTimeoutMs(60 * 1000);
+    this.#ain.provider.setDefaultTimeoutMs(SEND_TX_TIMEOUT);
 
   }
 
